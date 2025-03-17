@@ -62,8 +62,8 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label htmlFor={`price-${item.id}`}>Purchase Price ($)</Label>
-              <span className="text-muted-foreground text-sm">${item.price.toFixed(2)}</span>
+              <Label htmlFor={`price-${item.id}`}>Purchase Price (£)</Label>
+              <span className="text-muted-foreground text-sm">£{item.price.toFixed(2)}</span>
             </div>
             <div className="flex gap-4 items-center">
               <Slider

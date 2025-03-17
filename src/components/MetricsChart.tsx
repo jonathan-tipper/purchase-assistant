@@ -63,7 +63,7 @@ const MetricsChart: React.FC<MetricsChartProps> = ({ item, metrics, className = 
                     tickLine={false}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `$${value}`} 
+                    tickFormatter={(value) => `£${value}`} 
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={false}
