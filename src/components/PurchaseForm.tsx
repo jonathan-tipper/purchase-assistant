@@ -22,12 +22,12 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
   className = ""
 }) => {
   const handleInputChange = (field: keyof PurchaseItem, value: string | number) => {
-    const updatedItem = { ...item };
+    const updatedItem = { ...item } as PurchaseItem;
     
     if (typeof value === 'string' && !isNaN(parseFloat(value))) {
-      updatedItem[field] = parseFloat(value);
+      (updatedItem[field] as number) = parseFloat(value);
     } else if (typeof value === 'number') {
-      updatedItem[field] = value;
+      (updatedItem[field] as number) = value;
     } else if (field === 'name') {
       updatedItem.name = value as string;
     }
