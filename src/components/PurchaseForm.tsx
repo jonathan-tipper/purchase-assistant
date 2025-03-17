@@ -4,7 +4,7 @@ import { PurchaseItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Trash2 } from "lucide-react";
 
@@ -36,29 +36,8 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
   };
 
   return (
-    <Card className={`glass-card animate-scale-in ${className}`}>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex justify-between items-center">
-          <Input
-            value={item.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="Item name"
-            className="text-lg font-medium bg-transparent border-none shadow-none focus-visible:ring-0 px-0"
-          />
-          {onDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onDelete}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="h-5 w-5" />
-              <span className="sr-only">Delete item</span>
-            </Button>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className={`${className}`}>
+      <div className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between">
@@ -190,8 +169,22 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        
+        {onDelete && (
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onDelete}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Item
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

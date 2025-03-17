@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import PurchaseForm from "@/components/PurchaseForm";
@@ -7,8 +6,10 @@ import MetricsChart from "@/components/MetricsChart";
 import { PurchaseItem } from "@/types";
 import { calculateMetrics } from "@/utils/calculations";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -26,25 +27,53 @@ const Index = () => {
   const { toast } = useToast();
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([getDefaultItem()]);
   const [activeItemId, setActiveItemId] = useState<string>(purchaseItems[0].id);
+  const [currentItem, setCurrentItem] = useState<PurchaseItem>(purchaseItems[0]);
+  const [isEditMode, setIsEditMode] = useState(true);
 
-  const activeItem = purchaseItems.find(item => item.id === activeItemId) || purchaseItems[0];
-  const metrics = calculateMetrics(activeItem);
+  const metrics = calculateMetrics(currentItem);
 
   const handleItemChange = (updatedItem: PurchaseItem) => {
-    setPurchaseItems(prevItems => 
-      prevItems.map(item => item.id === updatedItem.id ? updatedItem : item)
-    );
+    setCurrentItem(updatedItem);
+  };
+
+  const handleSaveItem = () => {
+    // If it's a new item, add it to the list
+    if (!purchaseItems.some(item => item.id === currentItem.id)) {
+      setPurchaseItems(prevItems => [...prevItems, currentItem]);
+    } else {
+      // Otherwise update existing item
+      setPurchaseItems(prevItems => 
+        prevItems.map(item => item.id === currentItem.id ? currentItem : item)
+      );
+    }
+    
+    setActiveItemId(currentItem.id);
+    setIsEditMode(false);
+    
+    toast({
+      title: "Item saved",
+      description: `"${currentItem.name}" has been saved successfully.`,
+    });
   };
 
   const handleAddItem = () => {
     const newItem = getDefaultItem();
-    setPurchaseItems(prevItems => [...prevItems, newItem]);
-    setActiveItemId(newItem.id);
+    setCurrentItem(newItem);
+    setIsEditMode(true);
     
     toast({
-      title: "New item added",
-      description: "You can now configure your new purchase item.",
+      title: "Create new item",
+      description: "Give your item a name and configure the details.",
     });
+  };
+
+  const handleSelectItem = (id: string) => {
+    const selectedItem = purchaseItems.find(item => item.id === id);
+    if (selectedItem) {
+      setCurrentItem(selectedItem);
+      setActiveItemId(id);
+      setIsEditMode(false);
+    }
   };
 
   const handleDeleteItem = (id: string) => {
@@ -63,7 +92,9 @@ const Index = () => {
     // If deleting the active item, select another one
     if (id === activeItemId) {
       const remainingItems = purchaseItems.filter(item => item.id !== id);
-      setActiveItemId(remainingItems[0].id);
+      const newActiveItem = remainingItems[0];
+      setActiveItemId(newActiveItem.id);
+      setCurrentItem(newActiveItem);
     }
     
     toast({
@@ -84,26 +115,56 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="space-y-4">
-            {purchaseItems.map(item => (
-              <div 
-                key={item.id} 
-                className={`cursor-pointer transition-all duration-300 ${item.id === activeItemId ? 'scale-100' : 'scale-95 opacity-75'}`}
-                onClick={() => setActiveItemId(item.id)}
-              >
-                <PurchaseForm 
-                  item={item} 
-                  onChange={handleItemChange}
-                  onDelete={() => handleDeleteItem(item.id)}
+          <Card className="glass-card">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Input
+                  value={currentItem.name}
+                  onChange={(e) => setCurrentItem({...currentItem, name: e.target.value})}
+                  placeholder="Item name"
+                  className="text-lg font-medium"
                 />
+                <Button onClick={handleSaveItem} size="sm" variant="secondary" className="gap-1">
+                  <Save className="h-4 w-4" />
+                  Save
+                </Button>
               </div>
-            ))}
-          </div>
+            </CardHeader>
+            <CardContent>
+              <PurchaseForm 
+                item={currentItem} 
+                onChange={handleItemChange}
+                onDelete={() => handleDeleteItem(currentItem.id)}
+              />
+            </CardContent>
+          </Card>
+          
+          {purchaseItems.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-md font-medium mb-3">Saved Items</h3>
+              <div className="space-y-2">
+                {purchaseItems.map(item => (
+                  <div 
+                    key={item.id} 
+                    className={`p-3 rounded-md cursor-pointer transition-colors duration-200 ${
+                      item.id === activeItemId && !isEditMode ? 'bg-primary/10 border border-primary/20' : 'bg-secondary'
+                    }`}
+                    onClick={() => handleSelectItem(item.id)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-sm text-muted-foreground">£{item.price.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="lg:col-span-2 space-y-6">
           <ResultsDisplay metrics={metrics} />
-          <MetricsChart item={activeItem} metrics={metrics} />
+          <MetricsChart item={currentItem} metrics={metrics} />
         </div>
       </div>
     </Layout>
