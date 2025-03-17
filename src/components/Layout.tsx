@@ -1,5 +1,6 @@
 
 import React from "react";
+import MainMenu from "./MainMenu";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,12 +11,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 text-foreground overflow-hidden">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <header className="px-6 py-8 md:py-12 container max-w-5xl mx-auto">
-        <div className="flex justify-center items-center mb-8">
+        <div className="flex justify-between items-center mb-8">
           <div className="animate-entrance" style={{ "--delay": 0 } as React.CSSProperties}>
             <span className="px-3 py-1 text-xs font-medium bg-accent text-accent-foreground rounded-full mb-2 inline-block">
               Purchase Value Calculator
             </span>
           </div>
+          <MainMenu />
         </div>
         <h1 
           className="font-bold text-3xl md:text-4xl text-center bg-clip-text animate-entrance" 
