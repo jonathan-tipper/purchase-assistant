@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import PurchaseForm from "@/components/PurchaseForm";
@@ -10,6 +11,16 @@ import { Plus, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -29,6 +40,7 @@ const Index = () => {
   const [activeItemId, setActiveItemId] = useState<string>(purchaseItems[0].id);
   const [currentItem, setCurrentItem] = useState<PurchaseItem>(purchaseItems[0]);
   const [isEditMode, setIsEditMode] = useState(true);
+  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
 
   const metrics = calculateMetrics(currentItem);
 
@@ -56,10 +68,20 @@ const Index = () => {
     });
   };
 
-  const handleAddItem = () => {
+  const checkForUnsavedChanges = () => {
+    // Check if we're in edit mode and if there are unsaved changes
+    if (isEditMode) {
+      setShowAddItemDialog(true);
+    } else {
+      proceedWithAddItem();
+    }
+  };
+
+  const proceedWithAddItem = () => {
     const newItem = getDefaultItem();
     setCurrentItem(newItem);
     setIsEditMode(true);
+    setShowAddItemDialog(false);
     
     toast({
       title: "Create new item",
@@ -109,7 +131,7 @@ const Index = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Purchase Items</h2>
-            <Button onClick={handleAddItem} size="sm" className="gap-1">
+            <Button onClick={checkForUnsavedChanges} size="sm" className="gap-1">
               <Plus className="h-4 w-4" />
               Add Item
             </Button>
@@ -167,6 +189,22 @@ const Index = () => {
           <MetricsChart item={currentItem} metrics={metrics} />
         </div>
       </div>
+
+      <AlertDialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes to your current item. 
+              Would you like to discard these changes and create a new item?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={proceedWithAddItem}>Discard & Create New</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
