@@ -1,26 +1,13 @@
 
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
-import PurchaseForm from "@/components/PurchaseForm";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import MetricsChart from "@/components/MetricsChart";
 import { PurchaseItem } from "@/types";
 import { calculateMetrics } from "@/utils/calculations";
-import { Button } from "@/components/ui/button";
-import { Plus, Save } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import PurchaseSidebar from "@/components/PurchaseSidebar";
+import UnsavedChangesDialog from "@/components/UnsavedChangesDialog";
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -69,6 +56,10 @@ const Index = () => {
       title: "Item saved",
       description: `"${currentItem.name}" has been saved successfully.`,
     });
+  };
+
+  const handleNameChange = (name: string) => {
+    setCurrentItem({...currentItem, name});
   };
 
   const checkForUnsavedChanges = () => {
@@ -131,60 +122,19 @@ const Index = () => {
   return (
     <Layout>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Purchase Items</h2>
-            <Button onClick={checkForUnsavedChanges} size="sm" className="gap-1">
-              <Plus className="h-4 w-4" />
-              Add Item
-            </Button>
-          </div>
-          
-          <Card className="glass-card">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Input
-                  value={currentItem.name}
-                  onChange={(e) => setCurrentItem({...currentItem, name: e.target.value})}
-                  placeholder="Item name"
-                  className="text-lg font-medium"
-                />
-                <Button onClick={handleSaveItem} size="sm" variant="secondary" className="gap-1">
-                  <Save className="h-4 w-4" />
-                  Save
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <PurchaseForm 
-                item={currentItem} 
-                onChange={handleItemChange}
-                onDelete={() => handleDeleteItem(currentItem.id)}
-              />
-            </CardContent>
-          </Card>
-          
-          {purchaseItems.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-md font-medium mb-3">Saved Items</h3>
-              <div className="space-y-2">
-                {purchaseItems.map(item => (
-                  <div 
-                    key={item.id} 
-                    className={`p-3 rounded-md cursor-pointer transition-colors duration-200 ${
-                      item.id === activeItemId && !isEditMode ? 'bg-primary/10 border border-primary/20' : 'bg-secondary'
-                    }`}
-                    onClick={() => handleSelectItem(item.id)}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{item.name}</span>
-                      <span className="text-sm text-muted-foreground">£{item.price.toFixed(2)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="lg:col-span-1">
+          <PurchaseSidebar 
+            currentItem={currentItem}
+            purchaseItems={purchaseItems}
+            activeItemId={activeItemId}
+            isEditMode={isEditMode}
+            onItemChange={handleItemChange}
+            onSaveItem={handleSaveItem}
+            onAddItemClick={checkForUnsavedChanges}
+            onSelectItem={handleSelectItem}
+            onDeleteItem={handleDeleteItem}
+            onNameChange={handleNameChange}
+          />
         </div>
         
         <div className="lg:col-span-2 space-y-6">
@@ -193,21 +143,11 @@ const Index = () => {
         </div>
       </div>
 
-      <AlertDialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes to your current item. 
-              Would you like to discard these changes and create a new item?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={proceedWithAddItem}>Discard & Create New</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UnsavedChangesDialog
+        open={showAddItemDialog}
+        onOpenChange={setShowAddItemDialog}
+        onProceed={proceedWithAddItem}
+      />
     </Layout>
   );
 };
