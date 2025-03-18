@@ -49,14 +49,17 @@ const Index = () => {
   };
 
   const handleSaveItem = () => {
-    // If it's a new item, add it to the list
-    if (!purchaseItems.some(item => item.id === currentItem.id)) {
-      setPurchaseItems(prevItems => [...prevItems, currentItem]);
-    } else {
-      // Otherwise update existing item
+    // Check if this item already exists in the list by comparing its ID with all items in purchaseItems
+    const itemExists = purchaseItems.some(item => item.id === currentItem.id);
+    
+    if (itemExists) {
+      // Update existing item
       setPurchaseItems(prevItems => 
         prevItems.map(item => item.id === currentItem.id ? currentItem : item)
       );
+    } else {
+      // Add new item to the list
+      setPurchaseItems(prevItems => [...prevItems, currentItem]);
     }
     
     setActiveItemId(currentItem.id);
