@@ -51,7 +51,7 @@ const DataExport = ({ items }: DataExportProps) => {
         item.depreciationRatePercent,
         metrics.costPerUse.toFixed(2),
         metrics.costPerHour.toFixed(2),
-        metrics.totalUses
+        metrics.totalLifetimeUses
       ];
     });
     

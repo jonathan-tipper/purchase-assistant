@@ -59,7 +59,7 @@ const ComparisonTable = ({ items }: ComparisonTableProps) => {
                   <TableCell>{item.usesPerWeek}/week</TableCell>
                   <TableCell>£{metrics.costPerUse.toFixed(2)}</TableCell>
                   <TableCell>£{metrics.costPerHour.toFixed(2)}</TableCell>
-                  <TableCell>{metrics.totalUses}</TableCell>
+                  <TableCell>{metrics.totalLifetimeUses}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
