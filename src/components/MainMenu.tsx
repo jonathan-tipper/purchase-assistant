@@ -27,26 +27,20 @@ import CostTimeline from "./CostTimeline";
 import ComparisonTable from "./ComparisonTable";
 import DataExport from "./DataExport";
 import HelpTutorial from "./HelpTutorial";
+import ImportExportItems from "./ImportExportItems";
 
 // Re-using the same icons from before
-import { Palette, CreditCard, LineChart, Download, FileSpreadsheet, HelpCircle } from "lucide-react";
+import { Palette, CreditCard, LineChart, Download, FileSpreadsheet, HelpCircle, Save, Upload } from "lucide-react";
+import { PurchaseItem } from "@/types";
 
-const MainMenu = () => {
+interface MainMenuProps {
+  purchaseItems: PurchaseItem[];
+  onImportItems: (items: PurchaseItem[]) => void;
+}
+
+const MainMenu = ({ purchaseItems, onImportItems }: MainMenuProps) => {
   const { toast } = useToast();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
-  
-  // This would normally come from context/global state
-  const dummyItems = [
-    {
-      id: "item1",
-      name: "Example Item",
-      price: 500,
-      lifespanYears: 5,
-      usesPerWeek: 3,
-      minutesPerUse: 30,
-      depreciationRatePercent: 20,
-    }
-  ];
   
   const handleMenuItemClick = (action: string) => {
     setActiveFeature(action);
@@ -69,19 +63,25 @@ const MainMenu = () => {
       icon: <LineChart className="h-4 w-4 mr-2" />, 
       label: "View as Cost Timeline", 
       action: "Cost Timeline",
-      component: <CostTimeline item={dummyItems[0]} />
+      component: <CostTimeline item={purchaseItems[0]} />
     },
     { 
       icon: <FileSpreadsheet className="h-4 w-4 mr-2" />, 
       label: "Show Comparison Table", 
       action: "Comparison Table",
-      component: <ComparisonTable items={dummyItems} />
+      component: <ComparisonTable items={purchaseItems} />
     },
     { 
       icon: <Download className="h-4 w-4 mr-2" />, 
       label: "Export Data", 
       action: "Export Data",
-      component: <DataExport items={dummyItems} />
+      component: <DataExport items={purchaseItems} />
+    },
+    { 
+      icon: <Save className="h-4 w-4 mr-2" />, 
+      label: "Import/Export Items", 
+      action: "Import/Export Items",
+      component: <ImportExportItems items={purchaseItems} onImport={onImportItems} />
     },
     { 
       icon: <HelpCircle className="h-4 w-4 mr-2" />, 

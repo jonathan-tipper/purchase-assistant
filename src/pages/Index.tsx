@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import MetricsChart from "@/components/MetricsChart";
@@ -8,6 +7,7 @@ import { calculateMetrics } from "@/utils/calculations";
 import { useToast } from "@/components/ui/use-toast";
 import PurchaseSidebar from "@/components/PurchaseSidebar";
 import UnsavedChangesDialog from "@/components/UnsavedChangesDialog";
+import { loadPurchaseItems, savePurchaseItems } from "@/utils/storage";
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -23,11 +23,35 @@ const getDefaultItem = (): PurchaseItem => ({
 
 const Index = () => {
   const { toast } = useToast();
-  const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([getDefaultItem()]);
-  const [activeItemId, setActiveItemId] = useState<string>(purchaseItems[0].id);
-  const [currentItem, setCurrentItem] = useState<PurchaseItem>(purchaseItems[0]);
+  const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
+  const [activeItemId, setActiveItemId] = useState<string>("");
+  const [currentItem, setCurrentItem] = useState<PurchaseItem>(getDefaultItem());
   const [isEditMode, setIsEditMode] = useState(true);
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+
+  // Load items from local storage on initial render
+  useEffect(() => {
+    const storedItems = loadPurchaseItems();
+    if (storedItems.length > 0) {
+      setPurchaseItems(storedItems);
+      setActiveItemId(storedItems[0].id);
+      setCurrentItem(storedItems[0]);
+      setIsEditMode(false);
+    } else {
+      // If no stored items, use default item
+      const defaultItem = getDefaultItem();
+      setPurchaseItems([defaultItem]);
+      setActiveItemId(defaultItem.id);
+      setCurrentItem(defaultItem);
+    }
+  }, []);
+
+  // Save items to local storage whenever they change
+  useEffect(() => {
+    if (purchaseItems.length > 0) {
+      savePurchaseItems(purchaseItems);
+    }
+  }, [purchaseItems]);
 
   const metrics = calculateMetrics(currentItem);
 
@@ -119,8 +143,18 @@ const Index = () => {
     });
   };
 
+  const handleImportItems = (importedItems: PurchaseItem[]) => {
+    setPurchaseItems(importedItems);
+    const firstItem = importedItems[0];
+    if (firstItem) {
+      setActiveItemId(firstItem.id);
+      setCurrentItem(firstItem);
+      setIsEditMode(false);
+    }
+  };
+
   return (
-    <Layout>
+    <Layout purchaseItems={purchaseItems} onImportItems={handleImportItems}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <PurchaseSidebar 

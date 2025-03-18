@@ -1,43 +1,26 @@
 
 import React from "react";
 import MainMenu from "./MainMenu";
+import { PurchaseItem } from "@/types";
 
 interface LayoutProps {
   children: React.ReactNode;
+  purchaseItems?: PurchaseItem[];
+  onImportItems?: (items: PurchaseItem[]) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ 
+  children, 
+  purchaseItems = [], 
+  onImportItems = () => {} 
+}) => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 text-foreground overflow-hidden">
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      <header className="px-6 py-8 md:py-12 container max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div className="animate-entrance" style={{ "--delay": 0 } as React.CSSProperties}>
-            <span className="px-3 py-1 text-xs font-medium bg-accent text-accent-foreground rounded-full mb-2 inline-block">
-              Purchase Value Calculator
-            </span>
-          </div>
-          <MainMenu />
-        </div>
-        <h1 
-          className="font-bold text-3xl md:text-4xl text-center bg-clip-text animate-entrance" 
-          style={{ "--delay": 1 } as React.CSSProperties}
-        >
-          Calculate the true value of your purchases
-        </h1>
-        <p 
-          className="text-muted-foreground text-lg md:text-xl text-center mt-4 max-w-3xl mx-auto animate-entrance" 
-          style={{ "--delay": 2 } as React.CSSProperties}
-        >
-          Understand the cost per use and see the real value of items over their lifespan
-        </p>
+    <div className="container mx-auto py-6 px-4 max-w-6xl">
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Purchase Value Calculator</h1>
+        <MainMenu purchaseItems={purchaseItems} onImportItems={onImportItems} />
       </header>
-      <main className="container max-w-5xl mx-auto px-4 pb-16">
-        {children}
-      </main>
-      <footer className="container max-w-5xl mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
-        <p>Purchase Value Calculator &copy; {new Date().getFullYear()}</p>
-      </footer>
+      <main>{children}</main>
     </div>
   );
 };
