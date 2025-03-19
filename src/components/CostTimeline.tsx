@@ -49,9 +49,9 @@ const CostTimeline = ({ item }: CostTimelineProps) => {
   const timelineData = generateTimelineData(item);
 
   return (
-    <Card>
+    <Card className="glass-card animate-scale-in">
       <CardHeader>
-        <CardTitle className="text-xl">Cost Timeline</CardTitle>
+        <CardTitle className="text-xl">Cost Over Time</CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-4">

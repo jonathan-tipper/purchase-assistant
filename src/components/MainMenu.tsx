@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { 
@@ -23,14 +22,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 // Import all feature components
 import ThemeSelector from "./ThemeSelector";
 import CurrencySelector from "./CurrencySelector";
-import CostTimeline from "./CostTimeline";
 import ComparisonTable from "./ComparisonTable";
 import DataExport from "./DataExport";
 import HelpTutorial from "./HelpTutorial";
 import ImportExportItems from "./ImportExportItems";
 
 // Re-using the same icons from before
-import { Palette, CreditCard, LineChart, Download, FileSpreadsheet, HelpCircle, Save, Upload } from "lucide-react";
+import { Palette, CreditCard, FileSpreadsheet, Download, HelpCircle, Save } from "lucide-react";
 import { PurchaseItem } from "@/types";
 
 interface MainMenuProps {
@@ -58,12 +56,6 @@ const MainMenu = ({ purchaseItems, onImportItems }: MainMenuProps) => {
       label: "Change Currency", 
       action: "Change Currency",
       component: <CurrencySelector />
-    },
-    { 
-      icon: <LineChart className="h-4 w-4 mr-2" />, 
-      label: "View as Cost Timeline", 
-      action: "Cost Timeline",
-      component: <CostTimeline item={purchaseItems[0]} />
     },
     { 
       icon: <FileSpreadsheet className="h-4 w-4 mr-2" />, 
@@ -97,7 +89,6 @@ const MainMenu = ({ purchaseItems, onImportItems }: MainMenuProps) => {
     return feature.component;
   };
 
-  // For larger screens - use dropdown menu and dialog
   const DesktopMenu = () => (
     <div className="hidden md:block">
       <Dialog open={!!activeFeature} onOpenChange={(open) => !open && setActiveFeature(null)}>
@@ -137,7 +128,6 @@ const MainMenu = ({ purchaseItems, onImportItems }: MainMenuProps) => {
     </div>
   );
 
-  // For mobile - use slide-out sheet
   const MobileMenu = () => (
     <div className="md:hidden">
       <Sheet>
@@ -172,7 +162,6 @@ const MainMenu = ({ purchaseItems, onImportItems }: MainMenuProps) => {
         </SheetContent>
       </Sheet>
       
-      {/* Feature Dialog for Mobile */}
       {activeFeature && (
         <Dialog open={!!activeFeature} onOpenChange={(open) => !open && setActiveFeature(null)}>
           <DialogContent className="w-[calc(100vw-2rem)] max-w-[600px]">

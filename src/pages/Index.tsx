@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import MetricsChart from "@/components/MetricsChart";
+import CostTimeline from "@/components/CostTimeline";
 import { PurchaseItem } from "@/types";
 import { calculateMetrics } from "@/utils/calculations";
 import { useToast } from "@/components/ui/use-toast";
@@ -174,6 +176,7 @@ const Index = () => {
         <div className="lg:col-span-2 space-y-6">
           <ResultsDisplay metrics={metrics} />
           <MetricsChart item={currentItem} metrics={metrics} />
+          <CostTimeline item={currentItem} />
         </div>
       </div>
 
