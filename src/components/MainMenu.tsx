@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { 
@@ -25,9 +26,10 @@ import ComparisonTable from "./ComparisonTable";
 import DataExport from "./DataExport";
 import HelpTutorial from "./HelpTutorial";
 import ImportExportItems from "./ImportExportItems";
+import CurrencySelector from "./CurrencySelector";
 
 // Re-using the same icons from before
-import { Palette, FileSpreadsheet, Download, HelpCircle, Save } from "lucide-react";
+import { Palette, FileSpreadsheet, Download, HelpCircle, Save, CreditCard } from "lucide-react";
 import { PurchaseItem } from "@/types";
 
 interface MainMenuProps {
@@ -51,6 +53,12 @@ const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange
       label: "Change Theme", 
       action: "Change Theme",
       component: <ThemeSelector />
+    },
+    { 
+      icon: <CreditCard className="h-4 w-4 mr-2" />, 
+      label: "Change Currency", 
+      action: "Change Currency",
+      component: <CurrencySelector selectedCurrency={currencyCode} onCurrencyChange={onCurrencyChange} />
     },
     { 
       icon: <FileSpreadsheet className="h-4 w-4 mr-2" />, 

@@ -9,7 +9,6 @@ import { useToast } from "@/components/ui/use-toast";
 import PurchaseSidebar from "@/components/PurchaseSidebar";
 import UnsavedChangesDialog from "@/components/UnsavedChangesDialog";
 import { loadPurchaseItems, savePurchaseItems } from "@/utils/storage";
-import CurrencySelector from "@/components/CurrencySelector";
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -184,10 +183,6 @@ const Index = () => {
             onSelectItem={handleSelectItem}
             onDeleteItem={handleDeleteItem}
             onNameChange={handleNameChange}
-          />
-          <CurrencySelector 
-            selectedCurrency={currencyCode} 
-            onCurrencyChange={handleCurrencyChange} 
           />
         </div>
         
