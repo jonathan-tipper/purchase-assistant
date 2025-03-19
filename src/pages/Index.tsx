@@ -32,9 +32,7 @@ const Index = () => {
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [currencyCode, setCurrencyCode] = useState("GBP");
 
-  // Load items and currency from local storage on initial render
   useEffect(() => {
-    // Load currency from local storage
     const storedCurrency = localStorage.getItem("userCurrency");
     if (storedCurrency) {
       setCurrencyCode(storedCurrency);
@@ -47,7 +45,6 @@ const Index = () => {
       setCurrentItem(storedItems[0]);
       setIsEditMode(false);
     } else {
-      // If no stored items, use default item
       const defaultItem = getDefaultItem();
       setPurchaseItems([defaultItem]);
       setActiveItemId(defaultItem.id);
@@ -55,12 +52,10 @@ const Index = () => {
     }
   }, []);
 
-  // Save currency to local storage when it changes
   useEffect(() => {
     localStorage.setItem("userCurrency", currencyCode);
   }, [currencyCode]);
 
-  // Save items to local storage whenever they change
   useEffect(() => {
     if (purchaseItems.length > 0) {
       savePurchaseItems(purchaseItems);
@@ -82,16 +77,13 @@ const Index = () => {
   };
 
   const handleSaveItem = () => {
-    // Check if this item already exists in the list by comparing its ID with all items in purchaseItems
     const itemExists = purchaseItems.some(item => item.id === currentItem.id);
     
     if (itemExists) {
-      // Update existing item
       setPurchaseItems(prevItems => 
         prevItems.map(item => item.id === currentItem.id ? currentItem : item)
       );
     } else {
-      // Add new item to the list
       setPurchaseItems(prevItems => [...prevItems, currentItem]);
     }
     
@@ -109,7 +101,6 @@ const Index = () => {
   };
 
   const checkForUnsavedChanges = () => {
-    // Check if we're in edit mode and if there are unsaved changes
     if (isEditMode) {
       setShowAddItemDialog(true);
     } else {
@@ -139,7 +130,6 @@ const Index = () => {
   };
 
   const handleDeleteItem = (id: string) => {
-    // Don't allow deleting the last item
     if (purchaseItems.length <= 1) {
       toast({
         title: "Cannot delete",
@@ -151,7 +141,6 @@ const Index = () => {
     
     setPurchaseItems(prevItems => prevItems.filter(item => item.id !== id));
     
-    // If deleting the active item, select another one
     if (id === activeItemId) {
       const remainingItems = purchaseItems.filter(item => item.id !== id);
       const newActiveItem = remainingItems[0];
@@ -176,7 +165,12 @@ const Index = () => {
   };
 
   return (
-    <Layout purchaseItems={purchaseItems} onImportItems={handleImportItems}>
+    <Layout 
+      purchaseItems={purchaseItems} 
+      onImportItems={handleImportItems}
+      currencyCode={currencyCode}
+      onCurrencyChange={handleCurrencyChange}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
           <PurchaseSidebar 

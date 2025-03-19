@@ -7,18 +7,27 @@ interface LayoutProps {
   children: React.ReactNode;
   purchaseItems?: PurchaseItem[];
   onImportItems?: (items: PurchaseItem[]) => void;
+  currencyCode: string;
+  onCurrencyChange: (currency: string) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
   purchaseItems = [], 
-  onImportItems = () => {} 
+  onImportItems = () => {},
+  currencyCode = "GBP",
+  onCurrencyChange
 }) => {
   return (
     <div className="container mx-auto py-6 px-4 max-w-6xl">
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Purchase Value Calculator</h1>
-        <MainMenu purchaseItems={purchaseItems} onImportItems={onImportItems} />
+        <MainMenu 
+          purchaseItems={purchaseItems} 
+          onImportItems={onImportItems}
+          currencyCode={currencyCode}
+          onCurrencyChange={onCurrencyChange}
+        />
       </header>
       <main>{children}</main>
     </div>

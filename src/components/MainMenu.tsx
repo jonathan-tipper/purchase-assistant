@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { 
@@ -34,9 +35,11 @@ import { PurchaseItem } from "@/types";
 interface MainMenuProps {
   purchaseItems: PurchaseItem[];
   onImportItems: (items: PurchaseItem[]) => void;
+  currencyCode: string;
+  onCurrencyChange: (currency: string) => void;
 }
 
-const MainMenu = ({ purchaseItems, onImportItems }: MainMenuProps) => {
+const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange }: MainMenuProps) => {
   const { toast } = useToast();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
   
@@ -55,13 +58,13 @@ const MainMenu = ({ purchaseItems, onImportItems }: MainMenuProps) => {
       icon: <CreditCard className="h-4 w-4 mr-2" />, 
       label: "Change Currency", 
       action: "Change Currency",
-      component: <CurrencySelector />
+      component: <CurrencySelector selectedCurrency={currencyCode} onCurrencyChange={onCurrencyChange} />
     },
     { 
       icon: <FileSpreadsheet className="h-4 w-4 mr-2" />, 
       label: "Show Comparison Table", 
       action: "Comparison Table",
-      component: <ComparisonTable items={purchaseItems} />
+      component: <ComparisonTable items={purchaseItems} currencyCode={currencyCode} />
     },
     { 
       icon: <Download className="h-4 w-4 mr-2" />, 
