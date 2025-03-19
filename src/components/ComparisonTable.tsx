@@ -62,8 +62,8 @@ const ComparisonTable = ({ items }: ComparisonTableProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="glass-card animate-scale-in">
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">Purchase Comparison</CardTitle>
           <Button 
@@ -75,43 +75,45 @@ const ComparisonTable = ({ items }: ComparisonTableProps) => {
             {selectedItems.length === items.length ? (
               <>
                 <CheckSquare className="h-4 w-4" />
-                Deselect All
+                <span className="hidden sm:inline">Deselect All</span>
               </>
             ) : (
               <>
                 <Square className="h-4 w-4" />
-                Select All
+                <span className="hidden sm:inline">Select All</span>
               </>
             )}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground mb-4">
+        <div className="text-muted-foreground text-sm mb-4">
           Compare the efficiency of your different purchases side by side.
           {items.length > 0 && (
-            <span className="ml-2 text-sm">
-              Showing {selectedItems.length} of {items.length} items. Click on checkboxes to customize comparison.
+            <span className="ml-2">
+              Showing {selectedItems.length} of {items.length} items.
             </span>
           )}
-        </p>
+        </div>
         
         {/* Item selection list for mobile/smaller screens */}
-        <div className="md:hidden mb-4 flex flex-wrap gap-2">
-          {itemsWithMetrics.map(({ item }) => (
-            <Button 
-              key={`select-${item.id}`}
-              variant={selectedItems.includes(item.id) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleItemSelection(item.id)}
-              className="text-xs"
-            >
-              {item.name}
-            </Button>
-          ))}
-        </div>
+        {items.length > 0 && (
+          <div className="md:hidden mb-4 flex flex-wrap gap-2">
+            {itemsWithMetrics.map(({ item }) => (
+              <Button 
+                key={`select-${item.id}`}
+                variant={selectedItems.includes(item.id) ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleItemSelection(item.id)}
+                className="text-xs"
+              >
+                {item.name}
+              </Button>
+            ))}
+          </div>
+        )}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-6 px-6">
           <Table>
             <TableHeader>
               <TableRow>
@@ -120,9 +122,9 @@ const ComparisonTable = ({ items }: ComparisonTableProps) => {
                 <TableHead>Price</TableHead>
                 <TableHead>Lifespan</TableHead>
                 <TableHead>Uses</TableHead>
-                <TableHead>Cost/Use</TableHead>
-                <TableHead>Cost/Hour</TableHead>
-                <TableHead>Total Uses</TableHead>
+                <TableHead className="text-right">Cost/Use</TableHead>
+                <TableHead className="text-right">Cost/Hour</TableHead>
+                <TableHead className="text-right">Total Uses</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -139,9 +141,9 @@ const ComparisonTable = ({ items }: ComparisonTableProps) => {
                     <TableCell>£{item.price.toFixed(2)}</TableCell>
                     <TableCell>{item.lifespanYears} years</TableCell>
                     <TableCell>{item.usesPerWeek}/week</TableCell>
-                    <TableCell>£{metrics.costPerUse.toFixed(2)}</TableCell>
-                    <TableCell>£{metrics.costPerHour.toFixed(2)}</TableCell>
-                    <TableCell>{metrics.totalLifetimeUses}</TableCell>
+                    <TableCell className="text-right">£{metrics.costPerUse.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">£{metrics.costPerHour.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{metrics.totalLifetimeUses}</TableCell>
                   </TableRow>
                 ))
               ) : (
