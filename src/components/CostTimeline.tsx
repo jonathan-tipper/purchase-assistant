@@ -1,7 +1,7 @@
 
 import React from "react";
 import { PurchaseItem } from "@/types";
-import { calculateMetrics } from "@/utils/calculations";
+import { calculateMetrics, formatCurrency } from "@/utils/calculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -13,12 +13,16 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { currencies } from "./CurrencySelector";
 
 interface CostTimelineProps {
   item: PurchaseItem;
+  currencyCode: string;
 }
 
-const CostTimeline = ({ item }: CostTimelineProps) => {
+const CostTimeline = ({ item, currencyCode }: CostTimelineProps) => {
+  const currencySymbol = currencies.find(c => c.code === currencyCode)?.symbol || "£";
+  
   // Generate timeline data for the purchase
   const generateTimelineData = (item: PurchaseItem) => {
     const { price, depreciationRatePercent, lifespanYears } = item;
@@ -79,12 +83,12 @@ const CostTimeline = ({ item }: CostTimelineProps) => {
               />
               <YAxis 
                 label={{ 
-                  value: 'Value (£)', 
+                  value: `Value (${currencySymbol})`, 
                   angle: -90, 
                   position: 'insideLeft' 
                 }} 
               />
-              <Tooltip formatter={(value) => `£${value}`} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value), currencyCode)} />
               <Legend />
               <Line
                 type="monotone"

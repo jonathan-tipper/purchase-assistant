@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { PurchaseItem } from "@/types";
-import { calculateMetrics } from "@/utils/calculations";
+import { calculateMetrics, formatCurrency } from "@/utils/calculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -17,9 +17,10 @@ import { CheckSquare, Square } from "lucide-react";
 
 interface ComparisonTableProps {
   items: PurchaseItem[];
+  currencyCode: string;
 }
 
-const ComparisonTable = ({ items }: ComparisonTableProps) => {
+const ComparisonTable = ({ items, currencyCode }: ComparisonTableProps) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   
   // Initialize with all items selected
@@ -138,11 +139,11 @@ const ComparisonTable = ({ items }: ComparisonTableProps) => {
                       />
                     </TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>£{item.price.toFixed(2)}</TableCell>
+                    <TableCell>{formatCurrency(item.price, currencyCode)}</TableCell>
                     <TableCell>{item.lifespanYears} years</TableCell>
                     <TableCell>{item.usesPerWeek}/week</TableCell>
-                    <TableCell className="text-right">£{metrics.costPerUse.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">£{metrics.costPerHour.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(metrics.costPerUse, currencyCode)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(metrics.costPerHour, currencyCode)}</TableCell>
                     <TableCell className="text-right">{metrics.totalLifetimeUses}</TableCell>
                   </TableRow>
                 ))

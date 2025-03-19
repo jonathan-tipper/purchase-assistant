@@ -9,18 +9,30 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// This would normally come from a context/provider
-const currencies = [
+// Define the Currency type
+export interface Currency {
+  code: string;
+  symbol: string;
+  name: string;
+}
+
+// Available currencies
+export const currencies: Currency[] = [
   { code: "GBP", symbol: "£", name: "British Pound" },
   { code: "USD", symbol: "$", name: "US Dollar" },
   { code: "EUR", symbol: "€", name: "Euro" },
   { code: "JPY", symbol: "¥", name: "Japanese Yen" },
 ];
 
-const CurrencySelector = () => {
-  // In a real implementation, this would be stored in context
-  const [currency, setCurrency] = React.useState("GBP");
+interface CurrencySelectorProps {
+  selectedCurrency: string;
+  onCurrencyChange: (currency: string) => void;
+}
 
+const CurrencySelector: React.FC<CurrencySelectorProps> = ({
+  selectedCurrency,
+  onCurrencyChange,
+}) => {
   return (
     <Card>
       <CardHeader>
@@ -31,7 +43,7 @@ const CurrencySelector = () => {
           <p className="text-muted-foreground">
             Select the currency you want to use for calculations.
           </p>
-          <Select value={currency} onValueChange={setCurrency}>
+          <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>

@@ -7,6 +7,7 @@ import { formatCurrency, formatNumber } from "@/utils/calculations";
 interface ResultsDisplayProps {
   metrics: PurchaseMetrics;
   className?: string;
+  currencyCode: string;
 }
 
 const MetricItem: React.FC<{
@@ -22,7 +23,7 @@ const MetricItem: React.FC<{
   </div>
 );
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ metrics, className = "" }) => {
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ metrics, className = "", currencyCode }) => {
   return (
     <Card className={`glass-card animate-scale-in ${className}`}>
       <CardHeader>
@@ -32,24 +33,24 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ metrics, className = ""
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <MetricItem 
             label="Cost per use" 
-            value={formatCurrency(metrics.costPerUse)}
+            value={formatCurrency(metrics.costPerUse, currencyCode)}
             highlight={true}
           />
           <MetricItem 
             label="Cost per hour" 
-            value={formatCurrency(metrics.costPerHour)}
+            value={formatCurrency(metrics.costPerHour, currencyCode)}
           />
           <MetricItem 
             label="Cost per week" 
-            value={formatCurrency(metrics.costPerWeek)}
+            value={formatCurrency(metrics.costPerWeek, currencyCode)}
           />
           <MetricItem 
             label="Cost per month" 
-            value={formatCurrency(metrics.costPerMonth)}
+            value={formatCurrency(metrics.costPerMonth, currencyCode)}
           />
           <MetricItem 
             label="Cost per year" 
-            value={formatCurrency(metrics.costPerYear)}
+            value={formatCurrency(metrics.costPerYear, currencyCode)}
           />
           <MetricItem 
             label="Total uses" 
@@ -62,16 +63,16 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ metrics, className = ""
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <MetricItem 
             label="Per year" 
-            value={formatCurrency(metrics.depreciationPerYear)}
+            value={formatCurrency(metrics.depreciationPerYear, currencyCode)}
             highlight={true}
           />
           <MetricItem 
             label="Per month" 
-            value={formatCurrency(metrics.depreciationPerMonth)}
+            value={formatCurrency(metrics.depreciationPerMonth, currencyCode)}
           />
           <MetricItem 
             label="Per week" 
-            value={formatCurrency(metrics.depreciationPerWeek)}
+            value={formatCurrency(metrics.depreciationPerWeek, currencyCode)}
           />
           <MetricItem 
             label="Value retained" 

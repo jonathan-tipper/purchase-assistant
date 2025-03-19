@@ -4,14 +4,18 @@ import { PurchaseItem, PurchaseMetrics } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { formatCurrency } from "@/utils/calculations";
+import { currencies } from "./CurrencySelector";
 
 interface MetricsChartProps {
   item: PurchaseItem;
   metrics: PurchaseMetrics;
   className?: string;
+  currencyCode: string;
 }
 
-const MetricsChart: React.FC<MetricsChartProps> = ({ item, metrics, className = "" }) => {
+const MetricsChart: React.FC<MetricsChartProps> = ({ item, metrics, className = "", currencyCode }) => {
+  const currencySymbol = currencies.find(c => c.code === currencyCode)?.symbol || "£";
+  
   // Prepare cost breakdown data for bar chart
   const costData = [
     { name: "Per Use", value: metrics.costPerUse },
@@ -34,7 +38,7 @@ const MetricsChart: React.FC<MetricsChartProps> = ({ item, metrics, className = 
       return (
         <div className="bg-background/90 backdrop-blur-sm p-2 border border-border rounded-md shadow-sm">
           <p className="text-sm font-medium">{`${label}`}</p>
-          <p className="text-sm">{`${formatCurrency(payload[0].value)}`}</p>
+          <p className="text-sm">{`${formatCurrency(payload[0].value, currencyCode)}`}</p>
         </div>
       );
     }
@@ -63,7 +67,7 @@ const MetricsChart: React.FC<MetricsChartProps> = ({ item, metrics, className = 
                     tickLine={false}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `£${value}`} 
+                    tickFormatter={(value) => `${currencySymbol}${value}`} 
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={false}

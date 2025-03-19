@@ -1,5 +1,5 @@
-
 import { PurchaseItem, PurchaseMetrics } from "@/types";
+import { currencies } from "@/components/CurrencySelector";
 
 export const calculateMetrics = (item: PurchaseItem): PurchaseMetrics => {
   const totalWeeks = item.lifespanYears * 52;
@@ -41,10 +41,12 @@ export const calculateMetrics = (item: PurchaseItem): PurchaseMetrics => {
   };
 };
 
-export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-GB', {
+export const formatCurrency = (value: number, currencyCode = "GBP"): string => {
+  const currency = currencies.find(c => c.code === currencyCode) || currencies[0];
+  
+  return new Intl.NumberFormat('en', {
     style: 'currency',
-    currency: 'GBP',
+    currency: currency.code,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value);

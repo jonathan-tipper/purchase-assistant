@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import ResultsDisplay from "@/components/ResultsDisplay";
@@ -10,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import PurchaseSidebar from "@/components/PurchaseSidebar";
 import UnsavedChangesDialog from "@/components/UnsavedChangesDialog";
 import { loadPurchaseItems, savePurchaseItems } from "@/utils/storage";
+import CurrencySelector from "@/components/CurrencySelector";
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -30,9 +30,16 @@ const Index = () => {
   const [currentItem, setCurrentItem] = useState<PurchaseItem>(getDefaultItem());
   const [isEditMode, setIsEditMode] = useState(true);
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  const [currencyCode, setCurrencyCode] = useState("GBP");
 
-  // Load items from local storage on initial render
+  // Load items and currency from local storage on initial render
   useEffect(() => {
+    // Load currency from local storage
+    const storedCurrency = localStorage.getItem("userCurrency");
+    if (storedCurrency) {
+      setCurrencyCode(storedCurrency);
+    }
+
     const storedItems = loadPurchaseItems();
     if (storedItems.length > 0) {
       setPurchaseItems(storedItems);
@@ -48,6 +55,11 @@ const Index = () => {
     }
   }, []);
 
+  // Save currency to local storage when it changes
+  useEffect(() => {
+    localStorage.setItem("userCurrency", currencyCode);
+  }, [currencyCode]);
+
   // Save items to local storage whenever they change
   useEffect(() => {
     if (purchaseItems.length > 0) {
@@ -56,6 +68,14 @@ const Index = () => {
   }, [purchaseItems]);
 
   const metrics = calculateMetrics(currentItem);
+
+  const handleCurrencyChange = (newCurrency: string) => {
+    setCurrencyCode(newCurrency);
+    toast({
+      title: "Currency updated",
+      description: `Currency has been changed successfully.`,
+    });
+  };
 
   const handleItemChange = (updatedItem: PurchaseItem) => {
     setCurrentItem(updatedItem);
@@ -158,7 +178,7 @@ const Index = () => {
   return (
     <Layout purchaseItems={purchaseItems} onImportItems={handleImportItems}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
           <PurchaseSidebar 
             currentItem={currentItem}
             purchaseItems={purchaseItems}
@@ -171,12 +191,16 @@ const Index = () => {
             onDeleteItem={handleDeleteItem}
             onNameChange={handleNameChange}
           />
+          <CurrencySelector 
+            selectedCurrency={currencyCode} 
+            onCurrencyChange={handleCurrencyChange} 
+          />
         </div>
         
         <div className="lg:col-span-2 space-y-6">
-          <ResultsDisplay metrics={metrics} />
-          <MetricsChart item={currentItem} metrics={metrics} />
-          <CostTimeline item={currentItem} />
+          <ResultsDisplay metrics={metrics} currencyCode={currencyCode} />
+          <MetricsChart item={currentItem} metrics={metrics} currencyCode={currencyCode} />
+          <CostTimeline item={currentItem} currencyCode={currencyCode} />
         </div>
       </div>
 
