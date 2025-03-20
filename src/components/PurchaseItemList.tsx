@@ -2,6 +2,8 @@
 import React from "react";
 import { PurchaseItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/utils/calculations";
 
 interface PurchaseItemListProps {
   items: PurchaseItem[];
@@ -22,20 +24,33 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({
 
   return (
     <div className="mt-6">
-      <h3 className="text-md font-medium mb-3">Saved Items</h3>
-      <div className="space-y-2">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-md font-medium">Saved Items</h3>
+        <Badge variant="outline">{items.length} items</Badge>
+      </div>
+      
+      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 -mr-1">
         {items.map(item => (
           <div 
             key={item.id} 
             className={cn(
-              "p-3 rounded-md cursor-pointer transition-colors duration-200",
-              item.id === activeItemId && !isEditMode ? 'bg-primary/10 border border-primary/20' : 'bg-secondary'
+              "p-3 rounded-md cursor-pointer transition-colors duration-200 hover:bg-secondary/80",
+              item.id === activeItemId && !isEditMode 
+                ? 'bg-primary/10 border border-primary/20' 
+                : 'bg-secondary'
             )}
             onClick={() => onSelectItem(item.id)}
           >
             <div className="flex justify-between items-center">
-              <span className="font-medium">{item.name}</span>
-              <span className="text-sm text-muted-foreground">£{item.price.toFixed(2)}</span>
+              <div className="flex flex-col">
+                <span className="font-medium truncate max-w-[180px]">{item.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {item.usesPerWeek}x/week, {item.lifespanYears} years
+                </span>
+              </div>
+              <span className="text-sm font-medium">
+                £{item.price.toFixed(2)}
+              </span>
             </div>
           </div>
         ))}

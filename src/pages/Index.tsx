@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import ResultsDisplay from "@/components/ResultsDisplay";
@@ -76,23 +77,37 @@ const Index = () => {
   };
 
   const handleSaveItem = () => {
-    const itemExists = purchaseItems.some(item => item.id === currentItem.id);
+    // Fixed: Check if we're in create mode (new item) or edit mode (existing item)
+    const existingItemIndex = purchaseItems.findIndex(item => item.id === currentItem.id);
     
-    if (itemExists) {
+    if (existingItemIndex >= 0 && !isEditMode) {
+      // Update existing item
       setPurchaseItems(prevItems => 
         prevItems.map(item => item.id === currentItem.id ? currentItem : item)
       );
+      
+      toast({
+        title: "Item updated",
+        description: `"${currentItem.name}" has been updated successfully.`,
+      });
     } else {
-      setPurchaseItems(prevItems => [...prevItems, currentItem]);
+      // Create new item with a new ID when in create mode
+      const newItem = {
+        ...currentItem,
+        id: generateId() // Always generate a new ID for new items
+      };
+      
+      setPurchaseItems(prevItems => [...prevItems, newItem]);
+      setActiveItemId(newItem.id);
+      setCurrentItem(newItem);
+      
+      toast({
+        title: "Item created",
+        description: `"${newItem.name}" has been created successfully.`,
+      });
     }
     
-    setActiveItemId(currentItem.id);
     setIsEditMode(false);
-    
-    toast({
-      title: "Item saved",
-      description: `"${currentItem.name}" has been saved successfully.`,
-    });
   };
 
   const handleNameChange = (name: string) => {

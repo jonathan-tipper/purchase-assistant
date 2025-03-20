@@ -47,6 +47,7 @@ const PurchaseSidebar: React.FC<PurchaseSidebarProps> = ({
         <CardHeader className="pb-2">
           <PurchaseItemHeader 
             itemName={currentItem.name}
+            isEditMode={isEditMode}
             onNameChange={onNameChange}
             onSave={onSaveItem}
           />
