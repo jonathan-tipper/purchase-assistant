@@ -8,7 +8,10 @@ const STORAGE_KEY = "purchaseValueItems";
  */
 export const savePurchaseItems = (items: PurchaseItem[]): void => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    if (items && items.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      console.log("Items saved to local storage:", items.length);
+    }
   } catch (error) {
     console.error("Error saving purchase items to local storage:", error);
   }
@@ -21,7 +24,9 @@ export const loadPurchaseItems = (): PurchaseItem[] => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
-      return JSON.parse(data);
+      const items = JSON.parse(data);
+      console.log("Items loaded from local storage:", items.length);
+      return items;
     }
   } catch (error) {
     console.error("Error loading purchase items from local storage:", error);
