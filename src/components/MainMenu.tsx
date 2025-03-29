@@ -31,6 +31,7 @@ import CurrencySelector from "./CurrencySelector";
 // Re-using the same icons from before
 import { Palette, FileSpreadsheet, Download, HelpCircle, Save, CreditCard } from "lucide-react";
 import { PurchaseItem } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MainMenuProps {
   purchaseItems: PurchaseItem[];
@@ -42,6 +43,7 @@ interface MainMenuProps {
 const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange }: MainMenuProps) => {
   const { toast } = useToast();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   
   const handleMenuItemClick = (action: string) => {
     setActiveFeature(action);
@@ -64,7 +66,8 @@ const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange
       icon: <FileSpreadsheet className="h-4 w-4 mr-2" />, 
       label: "Show Comparison Table", 
       action: "Comparison Table",
-      component: <ComparisonTable items={purchaseItems} currencyCode={currencyCode} />
+      component: <ComparisonTable items={purchaseItems} currencyCode={currencyCode} />,
+      isWide: true
     },
     { 
       icon: <Download className="h-4 w-4 mr-2" />, 
@@ -92,6 +95,12 @@ const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange
     return feature.component;
   };
 
+  // Determine if current feature needs a wider dialog
+  const isWideFeature = () => {
+    const feature = menuItems.find(item => item.action === activeFeature);
+    return feature?.isWide || false;
+  };
+
   const DesktopMenu = () => (
     <div className="hidden md:block">
       <Dialog open={!!activeFeature} onOpenChange={(open) => !open && setActiveFeature(null)}>
@@ -102,7 +111,7 @@ const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange
               <span className="sr-only">Menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="bg-background">
             <DropdownMenuLabel>Options</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {menuItems.map((item, index) => (
@@ -119,13 +128,15 @@ const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className={`${isWideFeature() ? 'sm:max-w-[800px]' : 'sm:max-w-[600px]'}`}>
           <DialogHeader>
             <DialogTitle>
               {activeFeature}
             </DialogTitle>
           </DialogHeader>
-          {renderFeatureContent()}
+          <div className="pt-2 px-1">
+            {renderFeatureContent()}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -140,7 +151,7 @@ const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange
             <span className="sr-only">Menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="right">
+        <SheetContent side="right" className="w-full sm:w-[350px]">
           <SheetHeader>
             <SheetTitle>Menu Options</SheetTitle>
           </SheetHeader>
@@ -167,13 +178,15 @@ const MainMenu = ({ purchaseItems, onImportItems, currencyCode, onCurrencyChange
       
       {activeFeature && (
         <Dialog open={!!activeFeature} onOpenChange={(open) => !open && setActiveFeature(null)}>
-          <DialogContent className="w-[calc(100vw-2rem)] max-w-[600px]">
+          <DialogContent className="w-[calc(100vw-2rem)] max-w-[90vw] max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>
                 {activeFeature}
               </DialogTitle>
             </DialogHeader>
-            {renderFeatureContent()}
+            <div className="pt-2 px-1 overflow-y-auto">
+              {renderFeatureContent()}
+            </div>
           </DialogContent>
         </Dialog>
       )}

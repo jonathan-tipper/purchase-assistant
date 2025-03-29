@@ -21,5 +21,6 @@ export function useIsMobile() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  return !!isMobile
+  // Return false during SSR, then the actual value once mounted
+  return typeof isMobile === 'undefined' ? false : isMobile
 }

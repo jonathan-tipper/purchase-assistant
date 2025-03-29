@@ -67,7 +67,7 @@ const ComparisonTable = ({ items, currencyCode }: ComparisonTableProps) => {
 
   // Determine if we should show a mobile-optimized version
   const MobileComparisonTable = () => (
-    <div className="space-y-3">
+    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
       {sortedItems.length > 0 ? (
         sortedItems.map(({ item, metrics }) => (
           <Card key={item.id} className="overflow-hidden border-l-4" style={{ borderLeftColor: calculateEfficiencyColor(metrics.costPerUse, sortedItems) }}>
@@ -132,8 +132,8 @@ const ComparisonTable = ({ items, currencyCode }: ComparisonTableProps) => {
   );
 
   return (
-    <Card className="glass-card animate-scale-in">
-      <CardHeader className="pb-3">
+    <Card className="animate-scale-in border-0 shadow-none">
+      <CardHeader className="pb-3 px-0 sm:px-2">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <BarChart2 className="h-5 w-5 text-primary" />
@@ -164,7 +164,7 @@ const ComparisonTable = ({ items, currencyCode }: ComparisonTableProps) => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 sm:px-2">
         <div className="text-muted-foreground text-sm mb-4">
           Compare the efficiency of your different purchases side by side.
         </div>
@@ -189,9 +189,9 @@ const ComparisonTable = ({ items, currencyCode }: ComparisonTableProps) => {
         {isMobile ? (
           <MobileComparisonTable />
         ) : (
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="max-h-[60vh] overflow-auto border rounded-md">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                   <TableHead className="w-10"></TableHead>
                   <TableHead>Item</TableHead>
