@@ -9,7 +9,181 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          display_name: string | null
+          currency_code: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          display_name?: string | null
+          currency_code?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          display_name?: string | null
+          currency_code?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      purchase_items: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          price: number
+          lifespan_years: number
+          uses_per_week: number
+          minutes_per_use: number
+          depreciation_rate_percent: number
+          category: string | null
+          notes: string | null
+          image_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          price: number
+          lifespan_years: number
+          uses_per_week: number
+          minutes_per_use: number
+          depreciation_rate_percent: number
+          category?: string | null
+          notes?: string | null
+          image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          price?: number
+          lifespan_years?: number
+          uses_per_week?: number
+          minutes_per_use?: number
+          depreciation_rate_percent?: number
+          category?: string | null
+          notes?: string | null
+          image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      purchase_journal: {
+        Row: {
+          id: string
+          user_id: string
+          purchase_item_id: string | null
+          name: string
+          purchase_date: string
+          actual_price: number
+          satisfaction_score: number | null
+          notes: string | null
+          would_buy_again: boolean | null
+          actual_uses_per_week: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          purchase_item_id?: string | null
+          name: string
+          purchase_date: string
+          actual_price: number
+          satisfaction_score?: number | null
+          notes?: string | null
+          would_buy_again?: boolean | null
+          actual_uses_per_week?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          purchase_item_id?: string | null
+          name?: string
+          purchase_date?: string
+          actual_price?: number
+          satisfaction_score?: number | null
+          notes?: string | null
+          would_buy_again?: boolean | null
+          actual_uses_per_week?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_conversations: {
+        Row: {
+          id: string
+          user_id: string
+          context_type: string
+          messages: Json
+          related_item_ids: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          context_type: string
+          messages?: Json
+          related_item_ids?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          context_type?: string
+          messages?: Json
+          related_item_ids?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          theme: string
+          preferred_categories: string[]
+          budget_monthly: number | null
+          value_priorities: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          theme?: string
+          preferred_categories?: string[]
+          budget_monthly?: number | null
+          value_priorities?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          theme?: string
+          preferred_categories?: string[]
+          budget_monthly?: number | null
+          value_priorities?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

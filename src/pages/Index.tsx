@@ -194,11 +194,12 @@ const Index = () => {
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
-          <PurchaseSidebar 
+          <PurchaseSidebar
             currentItem={currentItem}
             purchaseItems={purchaseItems}
             activeItemId={activeItemId}
             isEditMode={isEditMode}
+            currencyCode={currencyCode}
             onItemChange={handleItemChange}
             onSaveItem={handleSaveItem}
             onAddItemClick={checkForUnsavedChanges}

@@ -115,3 +115,11 @@
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 }
+
+/* Mobile-friendly slider thumb - 44px touch target per Apple HIG */
+@media (max-width: 768px) {
+  [data-radix-slider-thumb] {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}

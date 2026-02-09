@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { PurchaseItem } from "@/types";
 import { calculateMetrics, formatCurrency } from "@/utils/calculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ComparisonInsight from "@/components/ai/ComparisonInsight";
 import {
   Table,
   TableBody,
@@ -185,6 +186,11 @@ const ComparisonTable = ({ items, currencyCode }: ComparisonTableProps) => {
             ))}
           </div>
         )}
+
+        <ComparisonInsight
+          items={sortedItems.map(({ item }) => item)}
+          metrics={sortedItems.map(({ metrics }) => metrics)}
+        />
 
         {isMobile ? (
           <MobileComparisonTable />

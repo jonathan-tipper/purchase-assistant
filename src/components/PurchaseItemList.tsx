@@ -10,6 +10,7 @@ interface PurchaseItemListProps {
   activeItemId: string;
   isEditMode: boolean;
   onSelectItem: (id: string) => void;
+  currencyCode?: string;
 }
 
 const PurchaseItemList: React.FC<PurchaseItemListProps> = ({
@@ -17,6 +18,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({
   activeItemId,
   isEditMode,
   onSelectItem,
+  currencyCode = "GBP",
 }) => {
   if (items.length === 0) {
     return null;
@@ -49,7 +51,7 @@ const PurchaseItemList: React.FC<PurchaseItemListProps> = ({
                 </span>
               </div>
               <span className="text-sm font-medium">
-                £{item.price.toFixed(2)}
+                {formatCurrency(item.price, currencyCode)}
               </span>
             </div>
           </div>

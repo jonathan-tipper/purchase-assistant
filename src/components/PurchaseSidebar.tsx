@@ -3,16 +3,19 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { PurchaseItem } from "@/types";
 import PurchaseForm from "@/components/PurchaseForm";
 import PurchaseItemList from "@/components/PurchaseItemList";
 import PurchaseItemHeader from "@/components/PurchaseItemHeader";
+import NaturalLanguageInput from "@/components/ai/NaturalLanguageInput";
 
 interface PurchaseSidebarProps {
   currentItem: PurchaseItem;
   purchaseItems: PurchaseItem[];
   activeItemId: string;
   isEditMode: boolean;
+  currencyCode?: string;
   onItemChange: (updatedItem: PurchaseItem) => void;
   onSaveItem: () => void;
   onAddItemClick: () => void;
@@ -26,6 +29,7 @@ const PurchaseSidebar: React.FC<PurchaseSidebarProps> = ({
   purchaseItems,
   activeItemId,
   isEditMode,
+  currencyCode = "GBP",
   onItemChange,
   onSaveItem,
   onAddItemClick,
@@ -52,20 +56,36 @@ const PurchaseSidebar: React.FC<PurchaseSidebarProps> = ({
             onSave={onSaveItem}
           />
         </CardHeader>
-        <CardContent>
-          <PurchaseForm 
-            item={currentItem} 
+        <CardContent className="space-y-4">
+          <NaturalLanguageInput
+            onItemParsed={(parsed) => {
+              onItemChange({
+                ...currentItem,
+                name: parsed.name || currentItem.name,
+                price: parsed.price ?? currentItem.price,
+                lifespanYears: parsed.lifespanYears ?? currentItem.lifespanYears,
+                usesPerWeek: parsed.usesPerWeek ?? currentItem.usesPerWeek,
+                minutesPerUse: parsed.minutesPerUse ?? currentItem.minutesPerUse,
+                depreciationRatePercent: parsed.depreciationRatePercent ?? currentItem.depreciationRatePercent,
+              });
+              if (parsed.name) onNameChange(parsed.name);
+            }}
+          />
+          <Separator />
+          <PurchaseForm
+            item={currentItem}
             onChange={onItemChange}
             onDelete={() => onDeleteItem(currentItem.id)}
           />
         </CardContent>
       </Card>
       
-      <PurchaseItemList 
+      <PurchaseItemList
         items={purchaseItems}
         activeItemId={activeItemId}
         isEditMode={isEditMode}
         onSelectItem={onSelectItem}
+        currencyCode={currencyCode}
       />
     </div>
   );
