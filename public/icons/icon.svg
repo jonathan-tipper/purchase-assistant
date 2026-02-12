@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#3b82f6"/>
+
+  <!-- Shopping bag -->
+  <path d="M160 160 L160 400 L352 400 L352 160 L160 160 Z"
+        fill="white"
+        stroke="white"
+        stroke-width="8"
+        stroke-linejoin="round"/>
+
+  <!-- Bag handles -->
+  <path d="M200 160 L200 120 Q200 80 256 80 Q312 80 312 120 L312 160"
+        fill="none"
+        stroke="white"
+        stroke-width="24"
+        stroke-linecap="round"/>
+
+  <!-- Checkmark -->
+  <path d="M200 280 L240 320 L320 220"
+        fill="none"
+        stroke="#3b82f6"
+        stroke-width="28"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>
