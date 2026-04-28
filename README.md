@@ -1,69 +1,88 @@
-# Welcome to your Lovable project
+# Purchase Assistant
 
-## Project info
+A purchase value calculator and journal that helps you make smarter buying decisions. Evaluate items by cost-per-use, lifespan, and depreciation — with an AI advisor to help you think through purchases before you make them.
 
-**URL**: https://lovable.dev/projects/6c495964-54b3-40c7-951f-5dbcf5784aac
+## Features
 
-## How can I edit this code?
+- **Value calculator** — enter price, lifespan, usage frequency, and depreciation to see real cost-per-use and cost-per-year
+- **Item comparison** — compare multiple items side-by-side with AI-generated analysis
+- **AI advisor** — conversational assistant to help research and evaluate purchases
+- **Purchase journal** — log past purchases with satisfaction scores and usage data
+- **AI journal review** — pattern analysis across your purchase history
+- **Guest mode** — calculator works without an account; AI features and journal require sign-in
 
-There are several ways of editing your application.
+## Tech stack
 
-**Use Lovable**
+- **Frontend**: Vite + React 18 + TypeScript + Tailwind CSS + shadcn/ui + Recharts
+- **Backend**: Supabase (auth, database, edge functions)
+- **AI**: Venice AI API (GLM-4.7 for reasoning, Qwen3-4b for fast extraction)
+- **Deployment**: Vercel (frontend) + Supabase Edge Functions (serverless backend)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6c495964-54b3-40c7-951f-5dbcf5784aac) and start prompting.
+## Local development
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ and npm
+- A Supabase project (or use the shared All Apps project)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Setup
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repo
+git clone https://github.com/tech-back-ctrl/purchase-assistant.git
+cd purchase-assistant
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Copy env vars and fill in your Supabase project credentials
+cp .env.example .env.local
+# Edit .env.local with your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon/publishable key |
 
-**Use GitHub Codespaces**
+### Supabase edge function secrets
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Set these in the Supabase dashboard under Edge Functions → Secrets:
 
-## What technologies are used for this project?
+| Secret | Description |
+|--------|-------------|
+| `VENICE_API_KEY` | Venice AI API key for all AI features |
 
-This project is built with .
+## Database
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+All tables use the `pa_` prefix in the `public` schema to isolate this app from others sharing the same Supabase project:
 
-## How can I deploy this project?
+- `pa_profiles` — extends `auth.users` with display name and currency preference
+- `pa_purchase_items` — items in the value calculator
+- `pa_purchase_journal` — logged past purchases with satisfaction data
+- `pa_ai_conversations` — stored AI conversation history
+- `pa_user_preferences` — per-user theme and preference settings
 
-Simply open [Lovable](https://lovable.dev/projects/6c495964-54b3-40c7-951f-5dbcf5784aac) and click on Share -> Publish.
+All tables have RLS policies scoped to `auth.uid()`. The migration is at [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql).
 
-## I want to use a custom domain - is that possible?
+## Edge functions
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+Four Supabase edge functions handle all AI features server-side (keeping the Venice API key out of the browser):
+
+| Function | Model | Purpose |
+|----------|-------|---------|
+| `ai-advisor` | GLM-4.7 | Conversational purchase advisor |
+| `ai-parse-input` | Qwen3-4b | Natural language → structured item parameters |
+| `ai-compare` | GLM-4.7 | Multi-item comparison analysis |
+| `ai-journal-review` | GLM-4.7 | Purchase pattern analysis |
+
+## Deployment
+
+The frontend deploys to Vercel. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in your Vercel project settings.
+
+Edge functions are deployed to Supabase and called directly from the browser — they do not go through Vercel.
