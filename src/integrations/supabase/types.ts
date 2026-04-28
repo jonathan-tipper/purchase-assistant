@@ -9,7 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      profiles: {
+      pa_profiles: {
         Row: {
           id: string
           display_name: string | null
@@ -32,7 +32,7 @@ export type Database = {
           updated_at?: string
         }
       }
-      purchase_items: {
+      pa_purchase_items: {
         Row: {
           id: string
           user_id: string
@@ -79,7 +79,7 @@ export type Database = {
           updated_at?: string
         }
       }
-      purchase_journal: {
+      pa_purchase_journal: {
         Row: {
           id: string
           user_id: string
@@ -123,7 +123,7 @@ export type Database = {
           updated_at?: string
         }
       }
-      ai_conversations: {
+      pa_ai_conversations: {
         Row: {
           id: string
           user_id: string
@@ -152,7 +152,7 @@ export type Database = {
           updated_at?: string
         }
       }
-      user_preferences: {
+      pa_user_preferences: {
         Row: {
           id: string
           user_id: string

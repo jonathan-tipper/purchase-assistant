@@ -39,7 +39,7 @@ function useSupabasePurchaseItems(userId: string) {
     queryKey,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("purchase_items")
+        .from("pa_purchase_items")
         .select("*")
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -51,7 +51,7 @@ function useSupabasePurchaseItems(userId: string) {
   const createMutation = useMutation({
     mutationFn: async (item: PurchaseItem) => {
       const { data, error } = await supabase
-        .from("purchase_items")
+        .from("pa_purchase_items")
         .insert(itemToDbRow(item, userId))
         .select()
         .single();
@@ -64,7 +64,7 @@ function useSupabasePurchaseItems(userId: string) {
   const updateMutation = useMutation({
     mutationFn: async (item: PurchaseItem) => {
       const { data, error } = await supabase
-        .from("purchase_items")
+        .from("pa_purchase_items")
         .update({
           name: item.name,
           price: item.price,
@@ -85,7 +85,7 @@ function useSupabasePurchaseItems(userId: string) {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from("purchase_items")
+        .from("pa_purchase_items")
         .delete()
         .eq("id", id);
       if (error) throw error;
@@ -96,7 +96,7 @@ function useSupabasePurchaseItems(userId: string) {
   const importMutation = useMutation({
     mutationFn: async (items: PurchaseItem[]) => {
       const rows = items.map((item) => itemToDbRow(item, userId));
-      const { error } = await supabase.from("purchase_items").insert(rows);
+      const { error } = await supabase.from("pa_purchase_items").insert(rows);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),

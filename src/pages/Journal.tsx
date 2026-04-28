@@ -49,7 +49,7 @@ const Journal = () => {
     queryKey: ["journal-entries", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("purchase_journal")
+        .from("pa_purchase_journal")
         .select("*")
         .order("purchase_date", { ascending: false });
       if (error) throw error;
@@ -60,7 +60,7 @@ const Journal = () => {
 
   const createEntry = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("purchase_journal").insert({
+      const { error } = await supabase.from("pa_purchase_journal").insert({
         user_id: user!.id,
         ...formData,
       });

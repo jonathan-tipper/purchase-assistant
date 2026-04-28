@@ -25,7 +25,7 @@ export async function migrateLocalDataToSupabase(userId: string): Promise<boolea
     depreciation_rate_percent: item.depreciationRatePercent,
   }));
 
-  const { error } = await supabase.from("purchase_items").insert(rows);
+  const { error } = await supabase.from("pa_purchase_items").insert(rows);
 
   if (error) {
     console.error("Migration failed:", error);
