@@ -1,88 +1,109 @@
 # Purchase Assistant
 
-A purchase value calculator and journal that helps you make smarter buying decisions. Evaluate items by cost-per-use, lifespan, and depreciation — with an AI advisor to help you think through purchases before you make them.
+Purchase Assistant helps people decide whether a purchase is worth it by turning upfront price, expected lifespan, usage frequency, and depreciation into practical value metrics. The current app combines an in-browser calculator, multi-item comparison, export tools, signed-in AI assistance, and a purchase journal.
 
-## Features
+See [PRD.md](PRD.md) for product requirements and [VISION.md](VISION.md) for product direction.
 
-- **Value calculator** — enter price, lifespan, usage frequency, and depreciation to see real cost-per-use and cost-per-year
-- **Item comparison** — compare multiple items side-by-side with AI-generated analysis
-- **AI advisor** — conversational assistant to help research and evaluate purchases
-- **Purchase journal** — log past purchases with satisfaction scores and usage data
-- **AI journal review** — pattern analysis across your purchase history
-- **Guest mode** — calculator works without an account; AI features and journal require sign-in
+## Current Capabilities
 
-## Tech stack
+- Value calculator for price, lifespan, uses per week, minutes per use, and yearly depreciation.
+- Cost metrics for cost per use, hour, week, month, and year, plus total lifetime uses and estimated retained value.
+- Visual analysis with Recharts bar, pie, and timeline charts.
+- Multi-item workspace with add, edit, delete, selection, and comparison table flows.
+- Import/export for calculator items as JSON, plus JSON/CSV export with calculated metrics.
+- Theme selector and calculator metric currency display for GBP, USD, EUR, and JPY.
+- Supabase email/password auth.
+- Signed-in AI features: natural-language item autofill, conversational purchase advisor, AI comparison analysis, and AI purchase journal review.
+- Signed-in purchase journal for actual purchases, satisfaction score, rebuy intent, actual usage, and notes.
 
-- **Frontend**: Vite + React 18 + TypeScript + Tailwind CSS + shadcn/ui + Recharts
-- **Backend**: Supabase (auth, database, edge functions)
-- **AI**: Venice AI API (GLM-4.7 for reasoning, Qwen3-4b for fast extraction)
-- **Deployment**: Vercel (frontend) + Supabase Edge Functions (serverless backend)
+## Current Data Behavior
 
-## Local development
+- The main calculator page stores its items in browser `localStorage`.
+- Authenticated advisor and journal routes use Supabase data through `usePurchaseItems` and journal queries.
+- Supabase tables use the `pa_` prefix and row level security scoped to `auth.uid()`.
+- The schema includes some fields that are not fully exposed in the UI yet, including item category, notes, image URL, stored AI conversations, and richer user preferences.
+
+## Tech Stack
+
+- Frontend: Vite, React 18, TypeScript, React Router, TanStack Query
+- UI: Tailwind CSS, shadcn/ui, Radix UI, lucide-react, Recharts
+- Backend: Supabase Auth, Postgres, Row Level Security, Edge Functions
+- AI: Venice AI API through Supabase Edge Functions
+- Deployment: Vercel for the frontend, Supabase for database and Edge Functions
+
+## Local Development
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- A Supabase project (or use the shared All Apps project)
+- A Supabase project with the database migration applied
+- A Venice AI API key if you need to run AI features
 
 ### Setup
 
 ```sh
-# Clone the repo
-git clone https://github.com/tech-back-ctrl/purchase-assistant.git
-cd purchase-assistant
-
-# Install dependencies
 npm install
+```
 
-# Copy env vars and fill in your Supabase project credentials
-cp .env.example .env.local
-# Edit .env.local with your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+Create `.env.local` in the project root:
 
-# Start the dev server
+```sh
+VITE_SUPABASE_URL=your-supabase-project-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+Start the development server:
+
+```sh
 npm run dev
 ```
 
-### Environment variables
+Useful commands:
 
-| Variable | Description |
-|----------|-------------|
-| `VITE_SUPABASE_URL` | Your Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon/publishable key |
+```sh
+npm run lint
+npm run build
+npm run preview
+```
 
-### Supabase edge function secrets
+## Supabase
 
-Set these in the Supabase dashboard under Edge Functions → Secrets:
+The database migration is at [supabase/migrations/001_initial_schema.sql](supabase/migrations/001_initial_schema.sql).
+
+Tables:
+
+- `pa_profiles` extends `auth.users` with display name and currency preference.
+- `pa_purchase_items` stores authenticated purchase calculator items.
+- `pa_purchase_journal` stores logged purchases and reflection data.
+- `pa_ai_conversations` is available for stored AI conversation history.
+- `pa_user_preferences` is available for user theme, category, budget, and value preference settings.
+
+Set this Supabase Edge Function secret before using AI features:
 
 | Secret | Description |
-|--------|-------------|
-| `VENICE_API_KEY` | Venice AI API key for all AI features |
+| --- | --- |
+| `VENICE_API_KEY` | Venice AI API key used by all AI Edge Functions |
 
-## Database
-
-All tables use the `pa_` prefix in the `public` schema to isolate this app from others sharing the same Supabase project:
-
-- `pa_profiles` — extends `auth.users` with display name and currency preference
-- `pa_purchase_items` — items in the value calculator
-- `pa_purchase_journal` — logged past purchases with satisfaction data
-- `pa_ai_conversations` — stored AI conversation history
-- `pa_user_preferences` — per-user theme and preference settings
-
-All tables have RLS policies scoped to `auth.uid()`. The migration is at [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql).
-
-## Edge functions
-
-Four Supabase edge functions handle all AI features server-side (keeping the Venice API key out of the browser):
+Edge functions:
 
 | Function | Model | Purpose |
-|----------|-------|---------|
-| `ai-advisor` | GLM-4.7 | Conversational purchase advisor |
-| `ai-parse-input` | Qwen3-4b | Natural language → structured item parameters |
-| `ai-compare` | GLM-4.7 | Multi-item comparison analysis |
-| `ai-journal-review` | GLM-4.7 | Purchase pattern analysis |
+| --- | --- | --- |
+| `ai-advisor` | `zai-org-glm-4.7` | Conversational purchase advisor with optional suggested item parameters |
+| `ai-parse-input` | `qwen3-4b` | Natural-language purchase description to structured item fields |
+| `ai-compare` | `zai-org-glm-4.7` | Concise multi-item comparison analysis |
+| `ai-journal-review` | `zai-org-glm-4.7` | Pattern analysis across purchase journal entries |
+
+AI calls are made server-side from Supabase Edge Functions so the Venice API key is not exposed to the browser.
 
 ## Deployment
 
-The frontend deploys to Vercel. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in your Vercel project settings.
+The Vercel configuration builds the Vite app into `dist` and rewrites all routes to `index.html`.
 
-Edge functions are deployed to Supabase and called directly from the browser — they do not go through Vercel.
+Set these Vercel environment variables:
+
+| Variable | Description |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
+
+Deploy the Supabase migration and Edge Functions separately from the frontend. Browser clients call the Edge Functions directly.
