@@ -4,7 +4,7 @@
 
 The original calculator established a useful idea, but the separate local calculator, cloud advisor and journal prevented a coherent decision flow. The new build makes a saved brief the central record. It supports the intended direction through vision extraction, bounded research, editable ownership scenarios and a feedback loop.
 
-This is a working first product slice. It is suitable for continued development and a controlled manual pilot. The AI integration remains a preview because signed-in live model evaluation has not yet been completed.
+This is a working first product slice. It is suitable for continued development and a controlled manual pilot. The AI integration remains a preview pending broader real-world quality evaluation.
 
 ## Audit findings and disposition
 
@@ -32,6 +32,7 @@ Original source state was `8e98030` on main, with no uncommitted work. The earli
 - Deno checked the deployed Edge Function entrypoint and shared modules.
 - Transactional SQL checks passed in the connected Supabase project: cross-user read/insert/update/delete, owner writes, revision conflicts, service-only reservation access, duplicate request rejection, user/global quotas, kill switch and workspace capacity. Fixtures and test quota settings rolled back.
 - Live `decision-assistant` request with the public anon key returned 401. Four retired handlers returned 410. No model call was required for those probes.
+- Signed-in live smoke passed against deployed function version 9: Auth, cloud round-trip, text extraction (6.7 seconds), synthetic-label vision (10.0 seconds), and cited research (19.3 seconds, 4 provider calls). See [AI-EVALUATION.md](AI-EVALUATION.md) for defects found, fixes and remaining quality limits.
 - Browser checks exercised the guest example, changed assumptions, save-and-leave guard, reopened persisted values, bought snapshot and saved actual-use note. Desktop and 390 px mobile screens were inspected.
 - Dependency audit reported 0 vulnerabilities after upgrades and removal of unused packages.
 
@@ -43,7 +44,7 @@ Cloudflare Pages is also connected to this repository. Its check failed on the o
 
 ## Material limits
 
-- Signed-in live model responses, real photo quality, email confirmation/recovery and a two-device browser session have not been exercised. Mocked service contracts are not substitutes for that evaluation.
+- Real-world photo quality, email confirmation/recovery and a two-device browser session have not been exercised. The signed-in synthetic smoke test is narrower than that evaluation.
 - Search returns excerpts, not a full-page verification. Exact variant, current price and availability still need source inspection.
 - Account mode is online. There is no offline write queue, live cross-device subscription, scheduled follow-up or background research.
 - No product analytics or paid-user evidence exists yet. The next product test is whether real buyers find the brief useful.

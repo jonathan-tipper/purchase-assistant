@@ -180,7 +180,7 @@ describe("server admission and failure handling", () => {
 });
 describe("bounded evidence research", () => {
   const summary = {
-    summary: "Compare the practical trade-offs.",
+    summary: "Fabricated savings and low resale value",
     considerations: ["Check the variant."],
     questions: ["Will you use it?"],
     claims: [{ text: "Manufacturer description", sourceIds: ["S1"] }],
@@ -215,7 +215,11 @@ describe("bounded evidence research", () => {
     const f = mock({
       outputs: [
         chat({
-          queries: ["coffee machine specs", "coffee machine alternative"],
+          queries: [
+            "coffee machine specs",
+            "coffee machine alternative",
+            "unused third suggestion",
+          ],
         }),
         search(),
         search(),
@@ -230,6 +234,9 @@ describe("bounded evidence research", () => {
     expect(response.status).toBe(200);
     const { research } = await response.json();
     expect(research.evidence).toHaveLength(1);
+    expect(research.summary).toContain("Based on your entered assumptions");
+    expect(research.summary).not.toContain("Fabricated");
+    expect(research.considerations.join(" ")).toContain("not facts verified");
     expect(research.inputKey).toBe(researchKey(d));
     const paid = f.mock.calls.filter(([u]) => String(u).includes("venice.ai"));
     expect(paid).toHaveLength(4);
@@ -258,7 +265,11 @@ describe("bounded evidence research", () => {
     ).toBe(502);
   });
   it("rejects an overlong plan before search calls", async () => {
-    const f = mock({ outputs: [chat({ queries: ["one", "two", "three"] })] });
+    const f = mock({
+      outputs: [
+        chat({ queries: Array.from({ length: 11 }, (_, i) => `query ${i}`) }),
+      ],
+    });
     expect(
       (
         await handleAssistant(

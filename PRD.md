@@ -12,7 +12,7 @@ The initial audience is people comparing durable home equipment, technology and 
 2. Save a decision with a UUID. Ask what it should do and what the person would do instead.
 3. Review realistic use, comparison period, running costs, useful life and resale. Unknown prices remain unknown. Starting assumptions are explicitly labelled.
 4. Compare up to 3 candidates in one currency and over one horizon. Show net ownership, cash outlay, per-use cost and replacements. Allow a half-use scenario.
-5. Optionally sign in and explicitly import the guest decision. Photo/text extraction proposes fields. Research supplies conditional trade-offs, questions and source links. Applying fields and saving research are separate deliberate actions.
+5. Optionally sign in and explicitly import the guest decision. Photo/text extraction proposes fields. Research combines a calculated conditional cost conclusion with sourced product claims and decision questions. Applying fields and saving research are separate deliberate actions.
 6. Record buying, waiting, passing or returning. Buying freezes the selected option and forecast. Later notes record usage, satisfaction and rebuy intent.
 7. Return to those observations on a future decision; export or delete the record when appropriate.
 
@@ -46,4 +46,4 @@ Recruit 5 to 10 people considering real purchases before adding more features. A
 
 ## Release boundary
 
-Automated tests cover domain behaviour, storage and AI service contracts; SQL checks cover owner isolation and quotas. Live signed-in model quality, email recovery and cross-device browser sessions need an authenticated evaluation. The AI UI is labelled a preview until that evidence exists. See the release record for checks actually completed.
+Automated tests cover domain behaviour, storage and AI service contracts; SQL checks cover owner isolation and quotas. A signed-in synthetic smoke test covers provider availability and basic extraction. Broader model quality, email recovery and cross-device browser sessions still need evaluation. The AI UI is labelled a preview until that evidence exists. See the release record for checks actually completed.
