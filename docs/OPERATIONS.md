@@ -8,6 +8,10 @@ Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE
 
 Default model IDs are `zai-org-glm-4.7` for text and `qwen3-vl-235b-a22b` for images. They are listed in [Venice's model catalogue](https://docs.venice.ai/models/overview). Check support and deprecations before changing them. The standalone [search API is experimental](https://docs.venice.ai/api-reference/endpoint/augment/search), so failures must remain a normal product state.
 
+## Build runtime
+
+`.node-version` selects Node.js 24 for environments that do not read `package.json` engines. GitHub CI uses the same file; Vercel's project is configured for Node 24. The repository also has a Cloudflare Pages integration. Its [build image configuration](https://developers.cloudflare.com/pages/configuration/build-image/) reads `.node-version`; older images otherwise default to Node 18, which cannot run this Vite version.
+
 ## Deployment order
 
 1. Run `npm ci` and `npm run check`.
