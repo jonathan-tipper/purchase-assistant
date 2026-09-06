@@ -1,147 +1,161 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Compass } from "lucide-react";
+import { cloudClient, supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
-
-const Auth = () => {
-  const { signIn, signUp } = useAuth();
+import { Button, Field, Notice } from "@/components/Controls";
+export default function Auth() {
+  const { user } = useAuth();
+  const [params] = useSearchParams();
+  const raw = params.get("next") || "/";
+  const next =
+    raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")
+      ? raw
+      : "/";
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupName, setSignupName] = useState("");
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const [mode, setMode] = useState<"login" | "signup" | "reset" | "recovery">(
+    params.get("mode") === "recovery" ? "recovery" : "login",
+  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (user && mode !== "recovery") navigate(next, { replace: true });
+  }, [user, mode, navigate, next]);
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
-    setLoading(false);
-
-    if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Welcome back!" });
-      navigate("/");
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const c = cloudClient();
+      if (mode === "login") {
+        const { error } = await c.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      }
+      if (mode === "signup") {
+        const { error } = await c.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin + "/auth?next=/workspace",
+          },
+        });
+        if (error) throw error;
+        setNotice("Check your email to confirm your account.");
+      }
+      if (mode === "reset") {
+        const { error } = await c.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/auth?mode=recovery",
+        });
+        if (error) throw error;
+        setNotice(
+          "If there is an account for that address, you’ll receive a reset link.",
+        );
+      }
+      if (mode === "recovery") {
+        const { error } = await c.auth.updateUser({ password });
+        if (error) throw error;
+        setNotice("Password updated.");
+        navigate("/workspace");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Account service unavailable.");
+    } finally {
+      setBusy(false);
     }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
-    setLoading(false);
-
-    if (error) {
-      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Account created", description: "Check your email to confirm your account." });
-    }
-  };
-
+  }
   return (
-    <div className="container mx-auto flex items-center justify-center min-h-screen px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Purchase Assistant</CardTitle>
-          <CardDescription>
-            Sign in to sync your data across devices and access AI features.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Log In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Log In
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Display Name</Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Account
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-6 text-center">
-            <Button variant="link" onClick={() => navigate("/")}>
-              Continue as guest
-            </Button>
+    <div className="auth-page">
+      <Link to="/" className="back-link">
+        <ArrowLeft size={16} />
+        Back to your decisions
+      </Link>
+      <div className="auth-panel">
+        <Compass size={32} />
+        <span className="eyebrow">PURCHASE ASSISTANT</span>
+        <h1>
+          {mode === "reset"
+            ? "Get back in."
+            : mode === "recovery"
+              ? "A fresh password."
+              : "Keep your thinking together."}
+        </h1>
+        <p>
+          An account workspace for your decisions, image reading and sourced
+          research. Guest items are imported only when you choose.
+        </p>
+        {!supabase && (
+          <Notice>
+            Account services aren’t configured here. The browser workspace still
+            works.
+          </Notice>
+        )}
+        {error && <Notice error>{error}</Notice>}
+        {notice && <Notice>{notice}</Notice>}
+        {mode !== "reset" && mode !== "recovery" && (
+          <div className="tabbar">
+            <button
+              aria-current={mode === "login" ? "page" : undefined}
+              onClick={() => setMode("login")}
+            >
+              Sign in
+            </button>
+            <button
+              aria-current={mode === "signup" ? "page" : undefined}
+              onClick={() => setMode("signup")}
+            >
+              Create account
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        )}
+        <form onSubmit={submit}>
+          {mode !== "recovery" && (
+            <Field label="Email">
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </Field>
+          )}
+          {mode !== "reset" && (
+            <Field label="Password">
+              <input
+                type="password"
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                minLength={mode === "login" ? undefined : 10}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </Field>
+          )}
+          <Button type="submit" disabled={busy || !supabase}>
+            {busy
+              ? "Working…"
+              : mode === "login"
+                ? "Sign in"
+                : mode === "signup"
+                  ? "Create account"
+                  : mode === "reset"
+                    ? "Send reset link"
+                    : "Update password"}
+          </Button>
+        </form>
+        {mode === "login" && (
+          <Button tone="quiet" onClick={() => setMode("reset")}>
+            Forgot your password?
+          </Button>
+        )}
+        <Link to="/">Continue in this browser</Link>
+      </div>
     </div>
   );
-};
-
-export default Auth;
+}

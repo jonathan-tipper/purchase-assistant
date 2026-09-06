@@ -1,0 +1,4 @@
+{
+  "imports": { "zod": "npm:zod@3.25.76" },
+  "compilerOptions": { "strict": true, "lib": ["deno.ns", "dom", "es2022"] }
+}

@@ -1,109 +1,63 @@
 # Purchase Assistant
 
-Purchase Assistant helps people decide whether a purchase is worth it by turning upfront price, expected lifespan, usage frequency, and depreciation into practical value metrics. The current app combines an in-browser calculator, multi-item comparison, export tools, signed-in AI assistance, and a purchase journal.
+A decision workspace for considered purchases. Capture a product, question the assumptions, compare ownership costs, review AI evidence and record what happened afterwards.
 
-See [PRD.md](PRD.md) for product requirements and [VISION.md](VISION.md) for product direction.
+The manual product works without an account. Sign in for account storage, image/text extraction and sourced research. The AI path is a preview pending a signed-in live model evaluation; it never saves or changes purchase assumptions without user action.
 
-## Current Capabilities
+## Run locally
 
-- Value calculator for price, lifespan, uses per week, minutes per use, and yearly depreciation.
-- Cost metrics for cost per use, hour, week, month, and year, plus total lifetime uses and estimated retained value.
-- Visual analysis with Recharts bar, pie, and timeline charts.
-- Multi-item workspace with add, edit, delete, selection, and comparison table flows.
-- Import/export for calculator items as JSON, plus JSON/CSV export with calculated metrics.
-- Theme selector and calculator metric currency display for GBP, USD, EUR, and JPY.
-- Supabase email/password auth.
-- Signed-in AI features: natural-language item autofill, conversational purchase advisor, AI comparison analysis, and AI purchase journal review.
-- Signed-in purchase journal for actual purchases, satisfaction score, rebuy intent, actual usage, and notes.
-
-## Current Data Behavior
-
-- The main calculator page stores its items in browser `localStorage`.
-- Authenticated advisor and journal routes use Supabase data through `usePurchaseItems` and journal queries.
-- Supabase tables use the `pa_` prefix and row level security scoped to `auth.uid()`.
-- The schema includes some fields that are not fully exposed in the UI yet, including item category, notes, image URL, stored AI conversations, and richer user preferences.
-
-## Tech Stack
-
-- Frontend: Vite, React 18, TypeScript, React Router, TanStack Query
-- UI: Tailwind CSS, shadcn/ui, Radix UI, lucide-react, Recharts
-- Backend: Supabase Auth, Postgres, Row Level Security, Edge Functions
-- AI: Venice AI API through Supabase Edge Functions
-- Deployment: Vercel for the frontend, Supabase for database and Edge Functions
-
-## Local Development
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- A Supabase project with the database migration applied
-- A Venice AI API key if you need to run AI features
-
-### Setup
+Use Node.js 24 and npm.
 
 ```sh
-npm install
-```
-
-Create `.env.local` in the project root:
-
-```sh
-VITE_SUPABASE_URL=your-supabase-project-url
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-```
-
-Start the development server:
-
-```sh
+npm ci
 npm run dev
 ```
 
-Useful commands:
+Open the URL printed by Vite. Without environment variables, the guest workspace still works. Copy `.env.example` to `.env.local` and fill in the Supabase URL and public anon key for account features. Never put `VENICE_API_KEY` or a Supabase service-role key in a `VITE_` variable.
 
 ```sh
-npm run lint
-npm run build
+npm run check   # lint, strict type checks, tests and production build
+npm run test:watch
 npm run preview
 ```
 
-## Supabase
+CI runs the same checks and type-checks the Edge Function with Deno. The committed SQL integration test runs separately against a Supabase database and rolls back its fixtures.
 
-The database migration is at [supabase/migrations/001_initial_schema.sql](supabase/migrations/001_initial_schema.sql).
+## What is built
 
-Tables:
+- Text, price and link capture, plus an explicit worked example.
+- A saved decision brief with needs, alternatives and editable assumptions.
+- Up to 3 candidate products compared over one period and currency.
+- Purchase, running, consumable, replacement and resale costs, with a sensitivity scenario.
+- Optional photo/text extraction with review before applying suggested fields.
+- A bounded research workflow: plan, up to 2 searches, then a perspective with source links. Search excerpts are labelled as incomplete evidence; changing the scenario marks old research stale.
+- Bought, waiting, decided-against and returned outcomes. Purchase forecasts stay frozen while later check-ins record actual use and satisfaction.
+- Guest storage, explicit account import, optimistic save conflicts, JSON/CSV export, validated imports and decision deletion.
+- Responsive light/dark presentation, keyboard controls, navigation guards and recovery/error states.
 
-- `pa_profiles` extends `auth.users` with display name and currency preference.
-- `pa_purchase_items` stores authenticated purchase calculator items.
-- `pa_purchase_journal` stores logged purchases and reflection data.
-- `pa_ai_conversations` is available for stored AI conversation history.
-- `pa_user_preferences` is available for user theme, category, budget, and value preference settings.
+## Architecture
 
-Set this Supabase Edge Function secret before using AI features:
+React 18, TypeScript, Vite, React Router, Zod and Supabase. Native controls and a small SVG chart replace the previous component/chart dependencies.
 
-| Secret | Description |
-| --- | --- |
-| `VENICE_API_KEY` | Venice AI API key used by all AI Edge Functions |
+| Boundary                                                      | Location                                                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Shared schema and deterministic calculations                  | `supabase/functions/_shared/domain.ts`, re-exported by `src/domain/decision.ts` |
+| Guest/cloud repositories and legacy import                    | `src/services/repository.ts`, `src/domain/portability.ts`                       |
+| Decision UI                                                   | `src/pages/Decision.tsx`                                                        |
+| AI request validation, auth, quota and provider orchestration | `supabase/functions/_shared/assistant.ts`                                       |
+| Behaviour and admission tests                                 | `tests/`                                                                        |
+| Database isolation, concurrency and quota tests               | `supabase/tests/decision_security.sql`                                          |
 
-Edge functions:
+## Data and limits
 
-| Function | Model | Purpose |
-| --- | --- | --- |
-| `ai-advisor` | `zai-org-glm-4.7` | Conversational purchase advisor with optional suggested item parameters |
-| `ai-parse-input` | `qwen3-4b` | Natural-language purchase description to structured item fields |
-| `ai-compare` | `zai-org-glm-4.7` | Concise multi-item comparison analysis |
-| `ai-journal-review` | `zai-org-glm-4.7` | Pattern analysis across purchase journal entries |
+Guest decisions use `pa.decisions.v1` in localStorage. The first load converts legacy `purchaseValueItems` once and keeps that original key as a recovery copy. Signing in opens a separate account workspace; copying browser decisions requires an explicit import. Deletion affects only the selected workspace copy.
 
-AI calls are made server-side from Supabase Edge Functions so the Venice API key is not exposed to the browser.
+Account decisions use `pa_decisions`, with owner-scoped RLS and revisions. Identity is `(user_id, id)`, so importing the same portable decision into another account does not collide. Decisions support up to 60 check-ins, a 90 KB validated document and 200 decisions per workspace. Full imports accept up to 20 MB. Browser storage capacity can be lower; failed saves leave the draft visible.
 
-## Deployment
+Original `pa_purchase_items` and `pa_purchase_journal` remain available for explicit recovery. Other legacy tables remain as historical data. The new app does not write to them. Raw photos stay in memory and are excluded from storage and export.
 
-The Vercel configuration builds the Vite app into `dist` and rewrites all routes to `index.html`.
+## Backend and deployment
 
-Set these Vercel environment variables:
+The frontend builds to `dist`; Vercel serves the SPA routes. Database migrations and Edge Functions deploy separately. See [docs/OPERATIONS.md](docs/OPERATIONS.md) for deployment order, usage limits, verification and rollback.
 
-| Variable | Description |
-| --- | --- |
-| `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon/publishable key |
-
-Deploy the Supabase migration and Edge Functions separately from the frontend. Browser clients call the Edge Functions directly.
+Product intent: [PRD.md](PRD.md), [VISION.md](VISION.md). Audit and release evidence: [docs/RELEASE.md](docs/RELEASE.md). AI evaluation cases: [docs/AI-EVALUATION.md](docs/AI-EVALUATION.md).
