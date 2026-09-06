@@ -1,141 +1,49 @@
-# Product Requirements Document: Purchase Assistant
+# Purchase Assistant product requirements
 
-## Source of Truth
+## Decision and scope
 
-This PRD documents the intended product behavior for the current repository state. It was authored from the codebase and existing README because no prior PRD or equivalent product requirements document existed.
+The September 2026 build replaces the separate calculator, advisor and journal with a persistent decision brief. The user approved a more ambitious direction using vision, language models and a simple research agent. This PRD supersedes the earlier document that described the calculator implementation.
 
-If a future GitHub issue, linked spec, or ADR intentionally changes product behavior, that artifact should supersede or update this PRD.
+The initial audience is people comparing durable home equipment, technology and hobby purchases. The desired outcome is an understandable decision, including waiting, buying used, repairing or deciding against the purchase. Purchase conversion is not the success measure.
 
-## Product Summary
+## Critical flow
 
-Purchase Assistant is a decision-support tool for people who want to buy more deliberately. It helps users translate purchase assumptions into cost-per-use, cost-per-time, depreciation, and satisfaction signals, then reflect on whether prior purchases delivered value.
+1. Describe the purchase, paste a product link, choose a photo path or open the clearly labelled worked example.
+2. Save a decision with a UUID. Ask what it should do and what the person would do instead.
+3. Review realistic use, comparison period, running costs, useful life and resale. Unknown prices remain unknown. Starting assumptions are explicitly labelled.
+4. Compare up to 3 candidates in one currency and over one horizon. Show net ownership, cash outlay, per-use cost and replacements. Allow a half-use scenario.
+5. Optionally sign in and explicitly import the guest decision. Photo/text extraction proposes fields. Research supplies conditional trade-offs, questions and source links. Applying fields and saving research are separate deliberate actions.
+6. Record buying, waiting, passing or returning. Buying freezes the selected option and forecast. Later notes record usage, satisfaction and rebuy intent.
+7. Return to those observations on a future decision; export or delete the record when appropriate.
 
-The product should make a purchase feel less like a one-time price check and more like a lightweight ownership decision.
+## Behaviour requirements
 
-## Problem
+| Area         | Requirement                                                                                                                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Calculation  | Pure shared code computes purchase plus running and consumable costs minus resale. Include replacements only when the horizon extends beyond useful life. Interpolate remaining value linearly. Do not add depreciation again.       |
+| Missing data | No invented price. Zero usage produces no cost-per-use figure. Invalid, negative, non-finite or excessive inputs prevent calculation/save.                                                                                           |
+| Currency     | GBP, USD, EUR and JPY stored per decision. Relabelling currency never implies conversion. AI extraction cannot silently switch an existing priced scenario to another currency.                                                      |
+| Persistence  | Guest and account repositories share the same versioned document. Revision conflicts block stale writes. Draft edits and check-in notes trigger navigation guards. Late save responses preserve newer edits.                         |
+| Import       | Validate first, preview counts, then add without overwriting matching IDs. Keep legacy and guest originals. Stable IDs make account re-import idempotent.                                                                            |
+| Extraction   | JPEG/PNG/WebP under 3 MB, matching signature, explicit facts only, missing numerical facts null, up to 3 questions. Do not claim to read a linked page.                                                                              |
+| Research     | Server validates the authenticated user, reserves quota atomically, makes at most 4 paid calls, limits search to 2 queries and returns at most 6 sources. No product URL fetching, arbitrary tool execution or checkout.             |
+| Evidence     | HTTPS links, retrieval dates, excerpts, claims referencing returned source IDs. Invalid citations fail closed. Old research becomes visibly stale when scenario inputs change. Citation existence is not proof that a claim is true. |
+| Privacy      | Images remain in memory. Show provider disclosure before submission. Check-ins are excluded from web/model research context. Account data clears from view when the account changes.                                                 |
+| Outcomes     | Forecast snapshots survive later edits. Individual check-ins and whole decisions can be deleted from the current workspace.                                                                                                          |
+| Resilience   | Auth, cloud, storage, provider and quota failures have explicit states. AI failure never prevents manual editing.                                                                                                                    |
 
-Consumers often compare purchases by sticker price, brand, or review scores, but the true value of an item depends on how often it will be used, how long it will last, how quickly it loses value, and whether similar past purchases were satisfying.
+## Deliberate exclusions
 
-Without a simple way to model those tradeoffs, users can overbuy premium items, underinvest in high-use items, or repeat regret patterns.
+No checkout, transaction imports, price watches, push/email reminders, automatic product catalogue, financial profiling, autonomous purchases or broad account deletion on the shared Supabase service. No claim of offline cloud editing or live realtime synchronisation. Account changes are loaded on opening/reloading the workspace; revision checks protect against conflicting writes.
 
-## Target Users
+The former cost-per-hour and depreciation charts are retired. The supported calculation is now ownership cost on a common horizon. Original minutes-per-use data remains in the retained legacy copy; the new model does not use it.
 
-- Deliberate consumers comparing expensive or recurring purchase decisions.
-- Budget-conscious users who want to understand total ownership value before buying.
-- Reflective shoppers who want to learn from past purchase satisfaction and usage.
-- Users who want AI help estimating purchase assumptions but still need transparent numbers.
+## Success measures to validate
 
-## Goals
+There is no analytics instrumentation yet. For an initial observed pilot, measure time to a saved useful brief, whether participants correct unrealistic assumptions, whether sources answer their actual question and whether their final decision changes for an understandable reason. Record unexpected data loss, fabricated prices and misleading citations as failures.
 
-- Help users estimate the practical value of a potential purchase before buying.
-- Make tradeoffs visible across price, lifespan, usage, and depreciation.
-- Support multiple purchase candidates in one comparison workspace.
-- Let signed-in users reflect on actual purchase outcomes over time.
-- Keep AI as decision support, not as an opaque final decision maker.
+Recruit 5 to 10 people considering real purchases before adding more features. Ask for a short follow-up after ownership. A good session can end with “I’ll keep what I have”. Avoid success metrics tied to amount spent or affiliate conversion.
 
-## Non-Goals
+## Release boundary
 
-- The product is not a marketplace, checkout, or affiliate product.
-- The product is not a financial advisor or credit recommendation tool.
-- The product does not currently track live prices, stock, coupons, warranties, or resale listings.
-- The product does not currently import transactions from banks, email receipts, or merchants.
-- The product does not currently guarantee cross-device sync for the main calculator page.
-
-## Current Functional Requirements
-
-### Calculator
-
-- Users can create and edit purchase items with name, price, expected lifespan, uses per week, minutes per use, and yearly depreciation rate.
-- The calculator must show cost per use, cost per hour, cost per week, cost per month, cost per year, total lifetime uses, depreciation amounts, and estimated retained value.
-- Users can add, select, and delete items.
-- At least one purchase item must remain in the calculator.
-- Guest users can use the calculator without an account.
-- The current main calculator page persists items in browser `localStorage`.
-
-### Visual Analysis
-
-- The app must visualize cost breakdowns and value retention for the active item.
-- The app must show a cost-over-time timeline for remaining value, cost per use, and cost per hour.
-
-### Comparison
-
-- Users can compare multiple saved items side by side.
-- Users can select which items are included in the comparison.
-- Items are sorted by cost-per-use efficiency in the comparison table.
-- Signed-in users can request AI comparison analysis for two or more selected items.
-
-### Import and Export
-
-- Users can export raw calculator items as JSON.
-- Users can export calculator items plus calculated metrics as JSON or CSV.
-- Users can import calculator items from a valid JSON file matching the `PurchaseItem` shape.
-
-### Authentication
-
-- Users can sign up and sign in with Supabase email/password authentication.
-- Users can continue as guests from the auth screen.
-- Advisor and journal routes require sign-in.
-- Signed-in features call Supabase with the user's authenticated session.
-
-### AI Assistance
-
-- Signed-in users can describe a purchase in natural language and have the app auto-fill calculator fields.
-- Signed-in users can chat with an AI purchase advisor.
-- The advisor can return suggested item parameters that the user can add to their item set.
-- Signed-in users can request AI comparison analysis from selected calculator items.
-- Signed-in users can request AI journal insights.
-- AI calls must run through Supabase Edge Functions so the Venice API key stays server-side.
-- AI responses should remain advisory and should expose or preserve the underlying purchase assumptions.
-
-### Purchase Journal
-
-- Signed-in users can log actual purchases with name, purchase date, actual price, satisfaction score, notes, rebuy intent, and actual uses per week.
-- Signed-in users can view journal entries ordered by purchase date.
-- Signed-in users can request AI analysis of journal patterns.
-
-### Preferences and Presentation
-
-- Users can choose light, dark, or system theme.
-- The calculator metric display supports GBP, USD, EUR, and JPY.
-- The app includes mobile bottom navigation for Calculator, Advisor, and Journal.
-- The app includes PWA metadata and icons.
-
-## Data Requirements
-
-- `pa_profiles` stores account profile metadata.
-- `pa_purchase_items` stores authenticated purchase items.
-- `pa_purchase_journal` stores purchase reflection entries.
-- `pa_ai_conversations` exists for AI conversation storage.
-- `pa_user_preferences` exists for richer user preferences.
-- All Supabase tables must use RLS policies scoped to the authenticated user.
-
-## Success Measures
-
-No analytics implementation is present in the repository. Product success should be validated with measures such as:
-
-- Calculator completion rate for new purchase evaluations.
-- Number of compared items per decision.
-- Import/export usage for retention and portability.
-- Signed-in conversion rate from guest usage.
-- Journal entry creation and repeat reflection rate.
-- User-reported confidence before and after using the tool.
-- Reduction in repeat regret patterns over time.
-
-## Risks and Constraints
-
-- AI estimates may be wrong or overly confident, so the UI should keep assumptions editable.
-- The current calculator page and authenticated Supabase item storage are not fully unified.
-- Currency handling is not consistent across every UI surface.
-- The schema contains capabilities not yet exposed in product flows.
-- There are no visible automated tests or AI evals in the repository.
-- Product behavior was inferred from the codebase, not confirmed through stakeholder interviews or user research.
-
-## Product Gaps to Resolve
-
-- Decide whether the main calculator should remain local-first or become Supabase-synced for signed-in users.
-- Clarify the intended migration behavior from guest `localStorage` items to authenticated storage.
-- Validate authenticated item ID handling against the `uuid` database schema before promising account-level item sync.
-- Decide whether stored AI conversations are in scope and, if so, define retention, deletion, and privacy behavior.
-- Decide whether category, notes, image URL, monthly budget, and value priorities should become user-facing features.
-- Add or document product analytics and success instrumentation.
-- Add a committed `.env.example` if onboarding new developers is important.
+Automated tests cover domain behaviour, storage and AI service contracts; SQL checks cover owner isolation and quotas. Live signed-in model quality, email recovery and cross-device browser sessions need an authenticated evaluation. The AI UI is labelled a preview until that evidence exists. See the release record for checks actually completed.

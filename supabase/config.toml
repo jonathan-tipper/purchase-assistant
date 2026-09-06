@@ -1,1 +1,16 @@
 project_id = "zdqziaizggsfjadpsymc"
+
+[functions.decision-assistant]
+verify_jwt = true
+
+[functions.ai-advisor]
+verify_jwt = true
+
+[functions.ai-compare]
+verify_jwt = true
+
+[functions.ai-journal-review]
+verify_jwt = true
+
+[functions.ai-parse-input]
+verify_jwt = true
