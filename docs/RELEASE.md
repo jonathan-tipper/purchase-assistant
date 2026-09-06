@@ -35,6 +35,12 @@ Original source state was `8e98030` on main, with no uncommitted work. The earli
 - Browser checks exercised the guest example, changed assumptions, save-and-leave guard, reopened persisted values, bought snapshot and saved actual-use note. Desktop and 390 px mobile screens were inspected.
 - Dependency audit reported 0 vulnerabilities after upgrades and removal of unused packages.
 
+## Hosting checks
+
+GitHub CI and Vercel preview deployment passed for this change. A compiled local browser run also loaded the decision flow without console errors. Node 24 is selected consistently in CI and hosting configuration.
+
+Cloudflare Pages is also connected to this repository. Its check failed on the original `8e98030` main commit and on this branch. Adding the shared Node runtime selector did not clear it. The build log requires a Cloudflare login that is unavailable in this session, so the cause remains unverified. This is an unresolved pre-existing integration, not a passing deployment. [Latest inspected Cloudflare build](https://dash.cloudflare.com/?to=/458fb17574c6877e79f9720c01e02d0e/pages/view/purchase-assistant/97725a6b-8dfc-47db-89c8-744a0bec5922).
+
 ## Material limits
 
 - Signed-in live model responses, real photo quality, email confirmation/recovery and a two-device browser session have not been exercised. Mocked service contracts are not substitutes for that evaluation.
