@@ -2,7 +2,7 @@
 
 A decision workspace for considered purchases. Capture a product, question the assumptions, compare ownership costs, review AI evidence and record what happened afterwards.
 
-The manual product works without an account. Sign in for account storage, image/text extraction and sourced research. The AI path is a preview pending a signed-in live model evaluation; it never saves or changes purchase assumptions without user action.
+The manual product works without an account. Sign in for account storage, image/text extraction and sourced research. The AI path is a preview pending broader quality evaluation; it never saves or changes purchase assumptions without user action.
 
 ## Run locally
 

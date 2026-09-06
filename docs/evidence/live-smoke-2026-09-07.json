@@ -1,0 +1,82 @@
+{
+  "dateUtc": "2026-09-06T23:27:28.279Z",
+  "functionVersion": 9,
+  "model": "qwen3-vl-235b-a22b",
+  "checks": {
+    "textFacts": true,
+    "imageFacts": true,
+    "researchContract": true
+  },
+  "fixtureCleanup": true,
+  "usage": [
+    {
+      "action": "extract",
+      "units": 1,
+      "status": "complete",
+      "provider_calls": 1,
+      "input_tokens": 146,
+      "output_tokens": 108
+    },
+    {
+      "action": "extract",
+      "units": 1,
+      "status": "complete",
+      "provider_calls": 1,
+      "input_tokens": 594,
+      "output_tokens": 121
+    },
+    {
+      "action": "research",
+      "units": 4,
+      "status": "complete",
+      "provider_calls": 4,
+      "input_tokens": 1951,
+      "output_tokens": 290
+    }
+  ],
+  "steps": [
+    {
+      "step": "authenticated-session",
+      "passed": true
+    },
+    {
+      "step": "cloud-document-round-trip",
+      "passed": true
+    },
+    {
+      "step": "extract",
+      "image": false,
+      "status": 200,
+      "elapsedMs": 6696,
+      "facts": {
+        "name": "Acme Quiet 200 headphones",
+        "price": 249,
+        "currency": "GBP",
+        "lifespanYears": null,
+        "usesPerWeek": 5
+      }
+    },
+    {
+      "step": "extract",
+      "image": true,
+      "status": 200,
+      "elapsedMs": 9993,
+      "facts": {
+        "name": "Acme Quiet 200 headphones",
+        "price": 249,
+        "currency": "GBP",
+        "lifespanYears": null,
+        "usesPerWeek": null
+      }
+    },
+    {
+      "step": "research",
+      "image": false,
+      "status": 200,
+      "elapsedMs": 19303,
+      "sourceCount": 5,
+      "claimCount": 3
+    }
+  ],
+  "scope": "Synthetic integration smoke; not a broad factual accuracy or reliability evaluation."
+}

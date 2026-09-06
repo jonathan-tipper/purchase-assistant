@@ -2,9 +2,19 @@
 
 ## Current evidence
 
-The automated suite tests request validation, real-user admission, quota rejection, provider call bounds, image signature checks, source filtering, citation IDs, exclusions of check-in text and the UI's review/apply/save boundary. Provider responses are mocked in those tests. The live public-key probe returns 401. These checks do not establish model accuracy or provider availability for a real signed-in request.
+The automated suite tests request validation, real-user admission, quota rejection, provider call bounds, image signature checks, source filtering, citation IDs, exclusions of check-in text and the UI's review/apply/save boundary. Provider responses are mocked in those tests. Live public-key probes return 401.
 
-A signed-in live vision/text/research evaluation has not been run in this build. No credentials were invented and no user's account was reused. The UI therefore labels research as a preview.
+Signed-in live checks ran on 7 September 2026 (UK time) against the deployed function, using temporary synthetic Auth accounts created and deleted by `scripts/live-smoke.mjs`. They exercised password sign-in, authenticated cloud persistence, explicit text extraction, a generated label image and web research for the Sage Bambino Plus. No existing user's account or private photo was used.
+
+The final all-Qwen run passed: text extraction 6.7 seconds, image extraction 10.0 seconds, research 19.3 seconds. Text returned £249, GBP, 5 weekly uses and unknown lifespan. Vision returned £249, GBP and unknown use/lifespan. Research returned 5 sources with resolving citations and exactly 4 paid calls. The temporary account and its app data were deleted successfully. See the [redacted evidence record](evidence/live-smoke-2026-09-07.json). These timings describe one run, not a latency guarantee.
+
+These checks caught three problems missed by mocks:
+
+- The planner returned 3 queries despite a maximum-2 instruction. The executor now takes at most 2 from a bounded proposal, retaining the 4-call ceiling. A regression test covers it.
+- GLM 4.7 timed out twice during synthesis and once during text extraction. Defaults now use Qwen3 VL 235B for all roles, with independent overrides. Timeouts remain finite and there are no automatic retries.
+- Free-form synthesis presented resale assumptions as facts and added uncited product details. The server now generates the conditional cost summary from shared arithmetic, labels inputs as assumptions, and uses the model only for cited product claims and questions. A regression test confirms model-written cost commentary is discarded.
+
+Citation IDs resolving does not prove semantic support. The successful research samples still illustrate a quality gap: a question speculated about pressure drops without evidence. The UI remains a preview, and question quality, conflicting source prices and exact-variant accuracy require a broader evaluation before widening the pilot.
 
 ## Before widening the pilot
 
