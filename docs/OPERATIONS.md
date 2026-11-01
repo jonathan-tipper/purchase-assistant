@@ -17,11 +17,28 @@ The default model is `qwen3-vl-235b-a22b` for text, images and research synthesi
 1. Run `npm ci` and `npm run check`.
 2. Review/apply the committed Supabase migrations in order. This repository shares a Supabase project with unrelated applications; do not reset or overwrite the project to deploy this app.
 3. Run `supabase/tests/decision_security.sql` as an administrative transaction. It inserts synthetic users and decisions, tests roles/quotas, then rolls everything back. A failure must abort and roll back the whole transaction.
-4. Deploy `decision-assistant` with `deno.json`, `deno.lock` and both shared TypeScript modules, JWT verification enabled.
+4. Deploy `decision-assistant` with `deno.json`, `deno.lock` and all shared TypeScript modules, including `auth-policy.ts`, with JWT verification enabled.
 5. Deploy the four legacy handlers as the committed 410 responses. They must not call Venice.
 6. Deploy the frontend through Vercel. Ensure auth redirect allowlists cover `/auth?mode=recovery` and the authorised production/local origins. Do not use broad wildcard production redirects.
 7. Probe the new endpoint with no user session and the public anon key; both must return 401 without a paid call. Old endpoints must return 410 for an accepted public JWT.
 8. Complete the signed-in smoke/evaluation in `AI-EVALUATION.md` before describing the AI preview as validated.
+
+### Shared-project app tokens
+
+Purchase Assistant currently accepts verified direct sessions only. After Auth
+verifies the exact bearer, the Edge Function checks its issuer, authenticated
+audience/role and subject against that verified user. Any non-null OAuth
+`client_id`, including malformed or empty values, is denied before the request
+body, service-role quota/ledger or paid provider is used. Identity scopes and
+user metadata do not grant assistant access. Direct sessions with absent/null
+client claims keep their existing flow; no suite client is approved for this app.
+
+Deploy this boundary before enabling new All Apps OAuth clients. Verify unrelated
+app tokens receive 403 without quota/provider work, while an ordinary direct
+session still passes normal admission. Source tests use synthetic tokens and
+mocked Auth; they do not establish that the hosted function was deployed.
+Retired AI endpoints remain 410, and the Spinning Plates webhook retains its
+separate custom-token authentication.
 
 The September migrations were applied using the Supabase connector; committed version filenames match the recorded remote migration versions. Never reapply them under a different name/version.
 
