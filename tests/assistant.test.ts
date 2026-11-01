@@ -31,10 +31,24 @@ const chat = (data: unknown) =>
     choices: [{ message: { content: JSON.stringify(data) } }],
     usage: { prompt_tokens: 10, completion_tokens: 20 },
   });
-function req(body: object, auth = true) {
+function accessToken(claims: Record<string, unknown> = {}) {
+  const encode = (value: unknown) =>
+    btoa(JSON.stringify(value))
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      .replace(/=+$/, "");
+  return `${encode({ alg: "RS256", typ: "JWT" })}.${encode({
+    sub: userId,
+    iss: env.SUPABASE_URL + "/auth/v1",
+    aud: "authenticated",
+    role: "authenticated",
+    ...claims,
+  })}.synthetic-signature`;
+}
+function req(body: object, auth = true, claims: Record<string, unknown> = {}) {
   return new Request("https://example.com/function", {
     method: "POST",
-    headers: auth ? { Authorization: "Bearer user-token" } : {},
+    headers: auth ? { Authorization: `Bearer ${accessToken(claims)}` } : {},
     body: JSON.stringify({ requestId: crypto.randomUUID(), ...body }),
   });
 }
@@ -78,6 +92,58 @@ describe("server admission and failure handling", () => {
       ).status,
     ).toBe(401);
     expect(f).toHaveBeenCalledTimes(1);
+  });
+  it.each(["learn-client", "taste-client", "", false, 0, {}])(
+    "denies verified unrelated or malformed OAuth client %j before body/quota/provider work",
+    async (clientId) => {
+      const f = mock();
+      const request = req({ action: "extract", description: "Camera" }, true, {
+        client_id: clientId,
+        user_metadata: { client_id: null },
+      });
+      const result = await handleAssistant(request, env, f);
+      expect(result.status).toBe(403);
+      expect(request.bodyUsed).toBe(false);
+      expect(f).toHaveBeenCalledTimes(1);
+      expect(String(f.mock.calls[0][0])).toContain("/auth/v1/user");
+    },
+  );
+  it("does not trust direct-looking claims when Auth rejects the bearer", async () => {
+    const f = mock({ auth: 401 });
+    const result = await handleAssistant(
+      req({ action: "extract", description: "Camera" }),
+      env,
+      f,
+    );
+    expect(result.status).toBe(401);
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+  it.each([
+    { iss: "https://other-project.example/auth/v1" },
+    { sub: crypto.randomUUID() },
+    { aud: "anon" },
+    { role: "service_role" },
+  ])("denies verified tokens with mismatched app claims %j", async (claims) => {
+    const f = mock();
+    const result = await handleAssistant(
+      req({ action: "extract", description: "Camera" }, true, claims),
+      env,
+      f,
+    );
+    expect(result.status).toBe(403);
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+  it("preserves explicit null-client direct sessions", async () => {
+    const f = mock();
+    const result = await handleAssistant(
+      req({ action: "extract", description: "Camera" }, true, {
+        client_id: null,
+      }),
+      env,
+      f,
+    );
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({ extraction });
   });
   it("validates the body before reserving quota", async () => {
     const f = mock();

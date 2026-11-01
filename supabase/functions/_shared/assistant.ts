@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { allowsDirectAppToken } from "./auth-policy.ts";
 import {
   decisionSchema,
   researchKey,
@@ -283,6 +284,11 @@ export async function handleAssistant(
       .safeParse(await userResponse.json());
     if (!user.success || user.data.is_anonymous)
       throw new HttpError(401, "Sign in with an account to use the assistant.");
+    if (!allowsDirectAppToken(auth, user.data.id, env.SUPABASE_URL))
+      throw new HttpError(
+        403,
+        "Sign in from Purchase Assistant to use the assistant.",
+      );
     const parsed = requestSchema.safeParse(await boundedBody(req));
     if (!parsed.success)
       throw new HttpError(
