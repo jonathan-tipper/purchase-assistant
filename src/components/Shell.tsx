@@ -14,8 +14,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspace } from "@/features/decisions/WorkspaceContext";
 import { download } from "@/services/download";
 import { Button, Notice } from "./Controls";
+import { ACCOUNT_ORIGIN } from "@/integrations/suite/account";
 export default function Shell() {
-  const { user, signOut, error: authError } = useAuth();
+  const { user, shared, signOut, error: authError } = useAuth();
   const { theme, setTheme } = useTheme();
   const { loading, error, reload, hasUnsavedChanges } = useWorkspace();
   const [logoutError, setLogoutError] = useState("");
@@ -66,6 +67,14 @@ export default function Shell() {
             {user ? "Account workspace" : "Saved in this browser"}
           </span>
           <div className="topbar-actions">
+            <a className="text-link" href={`${ACCOUNT_ORIGIN}/launchpad`}>
+              Launchpad
+            </a>
+            {user && (
+              <a className="text-link" href={`${ACCOUNT_ORIGIN}/account`}>
+                Account
+              </a>
+            )}
             <Button
               tone="quiet"
               aria-label={
@@ -89,12 +98,16 @@ export default function Shell() {
                       return;
                     await signOut();
                   } catch {
-                    setLogoutError("Sign out failed. Please retry.");
+                    setLogoutError(
+                      shared
+                        ? "You’re signed out of this app. Account-service revocation could not be confirmed."
+                        : "Sign out failed. Please retry.",
+                    );
                   }
                 }}
               >
                 <LogOut size={16} />
-                Sign out
+                {shared ? "Sign out here" : "Sign out"}
               </Button>
             ) : (
               <Link className="text-link" to="/auth">

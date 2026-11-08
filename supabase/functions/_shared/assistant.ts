@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { allowsDirectAppToken } from "./auth-policy.ts";
+import { verifiedAppTokenClaims } from "./auth-policy.ts";
 import {
   decisionSchema,
   researchKey,
@@ -19,6 +19,7 @@ export type Env = {
   PA_VISION_MODEL?: string;
   PA_RESEARCH_MODEL?: string;
   PA_AI_ENABLED?: string;
+  PA_SHARED_AUTH_CLIENT_ID?: string;
 };
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -284,7 +285,13 @@ export async function handleAssistant(
       .safeParse(await userResponse.json());
     if (!user.success || user.data.is_anonymous)
       throw new HttpError(401, "Sign in with an account to use the assistant.");
-    if (!allowsDirectAppToken(auth, user.data.id, env.SUPABASE_URL))
+    const claims = verifiedAppTokenClaims(
+      auth,
+      user.data.id,
+      env.SUPABASE_URL,
+      env.PA_SHARED_AUTH_CLIENT_ID,
+    );
+    if (!claims || !claims.sessionId)
       throw new HttpError(
         403,
         "Sign in from Purchase Assistant to use the assistant.",
@@ -328,6 +335,26 @@ export async function handleAssistant(
         503,
         "AI is unavailable at the moment. You can still edit and save your decision.",
       );
+    // Auth verifies the JWT above; the service-only session check also rejects
+    // globally signed-out but otherwise unexpired credentials before paid work.
+    const liveSession = await request(
+      `${env.SUPABASE_URL}/rest/v1/rpc/pa_has_live_session`,
+      {
+        method: "POST",
+        headers: adminHeaders,
+        body: JSON.stringify({
+          p_session: claims.sessionId,
+          p_user: user.data.id,
+        }),
+      },
+    );
+    if (!liveSession.ok)
+      throw new HttpError(
+        503,
+        "Account access could not be checked. Please try again.",
+      );
+    if ((await liveSession.json()) !== true)
+      throw new HttpError(401, "Sign in again to use the assistant.");
     const reservation = await request(
       `${env.SUPABASE_URL}/rest/v1/rpc/pa_reserve_ai_run`,
       {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowsDirectAppToken } from "../supabase/functions/_shared/auth-policy";
+import { allowsAppToken } from "../supabase/functions/_shared/auth-policy";
 
 const user = "11111111-1111-4111-8111-111111111111";
 const project = "https://auth.example.test";
@@ -17,18 +17,53 @@ function bearer(payload: unknown) {
   return `Bearer synthetic-header.${encoded}.synthetic-signature`;
 }
 
-describe("verified direct-session app boundary", () => {
-  it("accepts absent/null clients and authenticated array audiences", () => {
-    expect(allowsDirectAppToken(bearer(direct), user, project)).toBe(true);
+describe("verified app-client boundary", () => {
+  it("admits only the explicitly registered Purchase client while preserving direct sessions", () => {
+    const client = "purchase-client-25";
     expect(
-      allowsDirectAppToken(
-        bearer({ ...direct, client_id: null }),
+      allowsAppToken(
+        bearer({ ...direct, client_id: client }),
         user,
         project,
+        client,
       ),
     ).toBe(true);
     expect(
-      allowsDirectAppToken(
+      allowsAppToken(
+        bearer({ ...direct, client_id: "learn-client" }),
+        user,
+        project,
+        client,
+      ),
+    ).toBe(false);
+    expect(
+      allowsAppToken(
+        bearer({ ...direct, client_id: client }),
+        user,
+        project,
+        "",
+      ),
+    ).toBe(false);
+    expect(
+      allowsAppToken(
+        bearer({ ...direct, client_id: client }),
+        "other-user",
+        project,
+        client,
+      ),
+    ).toBe(false);
+    expect(allowsAppToken(bearer(direct), user, project, client)).toBe(true);
+    expect(
+      allowsAppToken(bearer({ ...direct, client_id: "" }), user, project, ""),
+    ).toBe(false);
+  });
+  it("accepts absent/null clients and authenticated array audiences", () => {
+    expect(allowsAppToken(bearer(direct), user, project)).toBe(true);
+    expect(
+      allowsAppToken(bearer({ ...direct, client_id: null }), user, project),
+    ).toBe(true);
+    expect(
+      allowsAppToken(
         bearer({ ...direct, aud: ["authenticated"] }),
         user,
         project + "/",
@@ -41,7 +76,7 @@ describe("verified direct-session app boundary", () => {
     ]),
   )("rejects every non-null OAuth client claim %j", (clientId) => {
     expect(
-      allowsDirectAppToken(
+      allowsAppToken(
         bearer({
           ...direct,
           client_id: clientId,
@@ -67,7 +102,7 @@ describe("verified direct-session app boundary", () => {
       { ...direct, role: "anon" },
     ].map((value) => [value]),
   )("rejects malformed or mismatched claims %j", (claims) => {
-    expect(allowsDirectAppToken(bearer(claims), user, project)).toBe(false);
+    expect(allowsAppToken(bearer(claims), user, project)).toBe(false);
   });
   it.each([
     "",
@@ -76,6 +111,6 @@ describe("verified direct-session app boundary", () => {
     "Bearer header.e30.",
     "Basic header.e30.signature",
   ])("fails closed for invalid bearer encoding %s", (header) => {
-    expect(allowsDirectAppToken(header, user, project)).toBe(false);
+    expect(allowsAppToken(header, user, project)).toBe(false);
   });
 });

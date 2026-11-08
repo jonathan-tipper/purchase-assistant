@@ -12,6 +12,7 @@ const env: Env = {
   VENICE_API_KEY: "secret",
 };
 const userId = crypto.randomUUID();
+const sessionId = crypto.randomUUID();
 const extraction = {
   name: "Camera",
   price: 500,
@@ -42,6 +43,7 @@ function accessToken(claims: Record<string, unknown> = {}) {
     iss: env.SUPABASE_URL + "/auth/v1",
     aud: "authenticated",
     role: "authenticated",
+    session_id: sessionId,
     ...claims,
   })}.synthetic-signature`;
 }
@@ -53,13 +55,21 @@ function req(body: object, auth = true, claims: Record<string, unknown> = {}) {
   });
 }
 function mock(
-  options: { auth?: number; quota?: boolean; outputs?: Response[] } = {},
+  options: {
+    auth?: number;
+    live?: boolean;
+    liveStatus?: number;
+    quota?: boolean;
+    outputs?: Response[];
+  } = {},
 ) {
   const outputs = options.outputs ?? [chat(extraction)];
   return vi.fn<typeof fetch>(async (input) => {
     const url = String(input);
     if (url.includes("/auth/"))
       return json({ id: userId }, options.auth ?? 200);
+    if (url.includes("/rpc/pa_has_live_session"))
+      return json(options.live ?? true, options.liveStatus ?? 200);
     if (url.includes("/rpc/")) return json(options.quota ?? true);
     if (url.includes("/pa_ai_runs?"))
       return new Response(null, { status: 204 });
@@ -67,6 +77,77 @@ function mock(
   });
 }
 describe("server admission and failure handling", () => {
+  it("admits a verified Purchase client only with a live session before paid work", async () => {
+    const f = mock();
+    const configured = {
+      ...env,
+      PA_SHARED_AUTH_CLIENT_ID: "purchase-client-25",
+    };
+    const result = await handleAssistant(
+      req({ action: "extract", description: "Camera" }, true, {
+        client_id: "purchase-client-25",
+      }),
+      configured,
+      f,
+    );
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({ extraction });
+    const check = f.mock.calls.find(([url]) =>
+      String(url).includes("/rpc/pa_has_live_session"),
+    );
+    expect(JSON.parse(check![1]!.body as string)).toEqual({
+      p_session: sessionId,
+      p_user: userId,
+    });
+    expect((check![1]!.headers as Record<string, string>).Authorization).toBe(
+      `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+    );
+  });
+  it.each([undefined, null, "", "not-a-session"])(
+    "denies missing or malformed session identity %j",
+    async (session) => {
+      const f = mock();
+      const result = await handleAssistant(
+        req({ action: "extract", description: "Camera" }, true, {
+          session_id: session,
+        }),
+        env,
+        f,
+      );
+      expect(result.status).toBe(403);
+      expect(f).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("denies a revoked session before quota or provider work", async () => {
+    const f = mock({ live: false });
+    const result = await handleAssistant(
+      req({ action: "extract", description: "Camera" }),
+      env,
+      f,
+    );
+    expect(result.status).toBe(401);
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(
+      f.mock.calls.some(
+        ([url]) =>
+          String(url).includes("pa_reserve_ai_run") ||
+          String(url).includes("venice.ai"),
+      ),
+    ).toBe(false);
+  });
+  it("fails closed when the live-session service is unavailable", async () => {
+    const f = mock({ liveStatus: 503 });
+    const result = await handleAssistant(
+      req({ action: "extract", description: "Camera" }),
+      env,
+      f,
+    );
+    expect(result.status).toBe(503);
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(
+      f.mock.calls.some(([url]) => String(url).includes("venice.ai")),
+    ).toBe(false);
+  });
   it("denies missing auth without any network call", async () => {
     const f = mock();
     expect(
@@ -164,7 +245,7 @@ describe("server admission and failure handling", () => {
         )
       ).status,
     ).toBe(429);
-    expect(f).toHaveBeenCalledTimes(2);
+    expect(f).toHaveBeenCalledTimes(3);
   });
   it("fails closed with no provider configuration", async () => {
     const f = mock();
@@ -220,7 +301,10 @@ describe("server admission and failure handling", () => {
       1,
     );
     expect(calls.some(([u]) => String(u).includes("pa_decisions"))).toBe(false);
-    const reserve = JSON.parse(calls[1][1]!.body as string);
+    const reserve = JSON.parse(
+      calls.find(([url]) => String(url).includes("/rpc/pa_reserve_ai_run"))![1]!
+        .body as string,
+    );
     expect(reserve.p_user).toBe(userId);
     const ledger = JSON.parse(calls.at(-1)![1]!.body as string);
     expect(ledger).toMatchObject({

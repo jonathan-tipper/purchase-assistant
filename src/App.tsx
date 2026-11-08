@@ -13,6 +13,7 @@ const Decision = lazy(() => import("@/pages/Decision"));
 const Outcomes = lazy(() => import("@/pages/Outcomes"));
 const Workspace = lazy(() => import("@/pages/Workspace"));
 const Auth = lazy(() => import("@/pages/Auth"));
+const SuiteCallback = lazy(() => import("@/pages/SuiteCallback"));
 function Root() {
   const { user, loading } = useAuth();
   return loading ? (
@@ -51,6 +52,11 @@ const router = createBrowserRouter([
     ],
   },
   { path: "/auth", element: <Auth />, errorElement: <ErrorPage /> },
+  {
+    path: "/auth/suite/callback",
+    element: <SuiteCallback />,
+    errorElement: <ErrorPage />,
+  },
 ]);
 export default function App() {
   return (
