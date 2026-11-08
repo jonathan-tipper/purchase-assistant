@@ -175,6 +175,12 @@ export function createPurchaseAccount(
         );
       return client.accessToken();
     },
+    async clearSessionIfCurrent(expectedAccessToken: string) {
+      const cleared =
+        (await client?.clearSessionIfCurrent(expectedAccessToken)) ?? false;
+      if (cleared) selectSource("suite");
+      return cleared;
+    },
     async signOut() {
       try {
         if (client) await client.signOut({ scope: "local" });

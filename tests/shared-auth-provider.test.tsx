@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   token: "",
   complete: vi.fn(),
   signOut: vi.fn(),
+  clearSessionIfCurrent: vi.fn(),
 }));
 vi.mock("../src/integrations/supabase/client", () => ({
   supabase: {
@@ -36,13 +37,14 @@ vi.mock("../src/integrations/supabase/client", () => ({
     begin: vi.fn(),
     complete: mocks.complete,
     signOut: mocks.signOut,
+    clearSessionIfCurrent: mocks.clearSessionIfCurrent,
   },
 }));
 const user = {
   id: "11111111-1111-4111-8111-111111111111",
   email: "fixture@example.test",
 };
-function token() {
+function token(signature = "signature") {
   return (
     "header." +
     btoa(
@@ -57,7 +59,8 @@ function token() {
       .replaceAll("+", "-")
       .replaceAll("/", "_")
       .replace(/=+$/, "") +
-    ".signature"
+    "." +
+    signature
   );
 }
 function Probe() {
@@ -95,12 +98,84 @@ beforeEach(() => {
     mocks.token = "";
     window.dispatchEvent(new Event(ACCOUNT_EVENT));
   });
+  mocks.clearSessionIfCurrent.mockImplementation(async (expected: string) => {
+    if (mocks.token !== expected) return false;
+    mocks.token = "";
+    window.dispatchEvent(new Event(ACCOUNT_EVENT));
+    return true;
+  });
 });
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
 describe("shared identity restoration", () => {
+  it.each([401, 403])(
+    "clears the exact rejected bearer after a %s identity response",
+    async (status) => {
+      const rejected = mocks.token;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response(null, { status })),
+      );
+      render(
+        <AuthProvider>
+          <Probe />
+        </AuthProvider>,
+      );
+      await screen.findByText("Guest");
+      expect(mocks.clearSessionIfCurrent).toHaveBeenCalledWith(rejected);
+      expect(mocks.token).toBe("");
+    },
+  );
+  it("retains the session after a transient provider failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 503 })),
+    );
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+    await screen.findByText("Guest");
+    expect(mocks.clearSessionIfCurrent).not.toHaveBeenCalled();
+    expect(mocks.token).toBe(token());
+  });
+  it("a delayed old rejection cannot clear a newer completed login", async () => {
+    const old = mocks.token;
+    let rejectOld!: (response: Response) => void;
+    const transport = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<Response>((done) => {
+            rejectOld = done;
+          }),
+      )
+      .mockImplementation(async () => Response.json(user));
+    mocks.complete.mockImplementation(async () => {
+      mocks.token = token("new-signature");
+      window.dispatchEvent(new Event(ACCOUNT_EVENT));
+      return "/workspace";
+    });
+    vi.stubGlobal("fetch", transport);
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(transport).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: "Complete fixture" }));
+    await screen.findByText(user.email);
+    await act(async () => {
+      rejectOld(new Response(null, { status: 401 }));
+    });
+    expect(mocks.clearSessionIfCurrent).toHaveBeenCalledWith(old);
+    expect(mocks.token).toBe(token("new-signature"));
+    expect(screen.getByText(user.email)).toBeTruthy();
+    expect(mocks.signOut).not.toHaveBeenCalled();
+  });
   it("coalesces focus-driven verification while a request is pending", async () => {
     let resolve!: (response: Response) => void;
     const transport = vi.fn(

@@ -17,6 +17,7 @@ export type SuiteClient = {
   getSession(): Promise<SuiteSession | null>;
   refresh(): Promise<SuiteSession>;
   accessToken(): Promise<string | null>;
+  clearSessionIfCurrent(expectedAccessToken: string): Promise<boolean>;
   signOut(options?: { scope?: "local" | "global" }): Promise<void>;
 };
 export class SuiteAuthError extends Error {

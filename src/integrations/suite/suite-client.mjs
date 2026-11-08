@@ -211,6 +211,18 @@ export function createSuiteClient(config) {
       return (current.expiresAt > now() + 30000 ? current : await refresh()).accessToken;
     },
 
+    async clearSessionIfCurrent(expectedAccessToken) {
+      if (typeof expectedAccessToken !== 'string' || !expectedAccessToken) return false;
+      return locked(async () => {
+        const current = await session();
+        if (!current || current.accessToken !== expectedAccessToken) return false;
+        // A rejected identity check belongs only to the token it checked. It
+        // must not clear a newer login or cancel an outstanding transaction.
+        await store.remove(sessionKey);
+        return true;
+      });
+    },
+
     async signOut({ scope = 'local' } = {}) {
       if (!['local', 'global'].includes(scope)) throw new SuiteAuthError('scope', 'Choose a supported sign-out scope.');
       await locked(async () => {

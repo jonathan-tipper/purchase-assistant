@@ -237,6 +237,32 @@ describe("Purchase shared-account transport", () => {
     expect(f.values.get(ACCOUNT_SOURCE_KEY)).toBe("suite");
     expect(await f.account.accessToken()).toBe(null);
   });
+  it("clears only the rejected current token and preserves an outstanding login", async () => {
+    const f = fixture();
+    await complete(f);
+    const pending = new URL(await f.account.begin("/workspace?new=1"));
+    expect(await f.account.clearSessionIfCurrent("access-one")).toBe(true);
+    expect(await f.account.accessToken()).toBe(null);
+    f.respond(async () =>
+      Response.json({
+        access_token: "access-new",
+        refresh_token: "refresh-new",
+        expires_in: 60,
+        token_type: "bearer",
+      }),
+    );
+    await expect(
+      f.account.complete(
+        config.redirectUri +
+          "?code=new&state=" +
+          pending.searchParams.get("state"),
+      ),
+    ).resolves.toBe("/workspace?new=1");
+    expect(await f.account.clearSessionIfCurrent("access-one")).toBe(false);
+    expect(await f.account.accessToken()).toBe("access-new");
+    expect(f.requests).toHaveLength(2);
+    expect(f.account.source()).toBe("suite");
+  });
   it.each([
     "//foreign.example",
     "/.//foreign.example/app",

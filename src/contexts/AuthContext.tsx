@@ -35,8 +35,11 @@ async function accountUser() {
     redirect: "error",
     signal: AbortSignal.timeout(10_000),
   });
-  if (!response.ok)
+  if (!response.ok) {
+    if ([401, 403].includes(response.status))
+      await sharedAccount.clearSessionIfCurrent(token);
     throw new Error("Sign in again to restore your account workspace.");
+  }
   const user = (await response.json()) as User;
   if (
     !user.id ||
@@ -47,6 +50,7 @@ async function accountUser() {
       sharedAccount.clientId,
     )
   ) {
+    await sharedAccount.clearSessionIfCurrent(token);
     throw new Error("This session was not issued for Purchase Assistant.");
   }
   return user;

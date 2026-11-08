@@ -66,6 +66,12 @@ sign-out from reviving an older legacy SDK session. Existing legacy credentials
 are retained separately for compatibility. Cross-tab storage/focus events
 refresh the displayed account without changing guest data.
 
+Blocked or failed account-source storage fails closed rather than reviving a
+cached legacy account. A rejected identity check removes only the token it
+actually verified; a delayed response cannot erase a newer completed login or
+cancel an outstanding sign-in transaction. Transient provider failures retain
+the session for a later retry.
+
 The callback removes its one-use query before app navigation, completes only
 once under React StrictMode and verifies the user before opening the account
 workspace. Auth routes use no-store, no-referrer and noindex headers. Query and
