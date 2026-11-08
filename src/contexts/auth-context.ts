@@ -5,6 +5,10 @@ type Auth = {
   loading: boolean;
   error: string | null;
   signOut: () => Promise<void>;
+  shared: boolean;
+  sharedEnabled: boolean;
+  startSharedSignIn: (next: string) => Promise<void>;
+  completeSharedSignIn: (url: string) => Promise<string>;
 };
 export const AuthContext = createContext<Auth | undefined>(undefined);
 export function useAuth() {

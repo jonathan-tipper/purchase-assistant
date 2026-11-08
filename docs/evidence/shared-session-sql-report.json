@@ -1,0 +1,71 @@
+{
+  "engine": "PGlite in-memory Postgres",
+  "package": "@electric-sql/pglite",
+  "version": "0.5.15",
+  "postgres_version": "PostgreSQL 18.6 (PGlite 0.5.15) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.13 (e13ee988ce3d87a738dd8f3661d02223308c412a), 32-bit",
+  "migration": "20261108104748_purchase_live_session_admission.sql",
+  "migration_sha256": "e9e6bb5b12a6d357d334db42cca371f37fbfbd3bc223876fde170fa6ade2c7e1",
+  "checks": [
+    {
+      "name": "The actual migration executes on the Postgres engine",
+      "passed": true
+    },
+    {
+      "name": "Helper uses security definer and an empty search path",
+      "passed": true
+    },
+    {
+      "name": "anon has no execute privilege",
+      "passed": true
+    },
+    {
+      "name": "anon cannot execute the helper",
+      "passed": true
+    },
+    {
+      "name": "authenticated has no execute privilege",
+      "passed": true
+    },
+    {
+      "name": "authenticated cannot execute the helper",
+      "passed": true
+    },
+    {
+      "name": "Only service_role receives execute access",
+      "passed": true
+    },
+    {
+      "name": "Service role can verify a live owned session",
+      "passed": true
+    },
+    {
+      "name": "A different user cannot borrow the session",
+      "passed": true
+    },
+    {
+      "name": "An expired session is rejected",
+      "passed": true
+    },
+    {
+      "name": "A future bounded session is accepted",
+      "passed": true
+    },
+    {
+      "name": "A missing session is rejected",
+      "passed": true
+    },
+    {
+      "name": "Null session or owner is rejected",
+      "passed": true
+    },
+    {
+      "name": "Service role cannot directly read private Auth session rows",
+      "passed": true
+    },
+    {
+      "name": "Deleting a revoked session prevents further admission",
+      "passed": true
+    }
+  ],
+  "limit": "Synthetic in-memory schema/roles exercise actual SQL and execute permissions; not a hosted Supabase migration, HTTP Data API or production proof."
+}

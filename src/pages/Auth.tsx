@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Compass } from "lucide-react";
-import { cloudClient, supabase } from "@/integrations/supabase/client";
+import { sharedAccount, supabase } from "@/integrations/supabase/client";
+import { ACCOUNT_ORIGIN, safePurchaseNext } from "@/integrations/suite/account";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button, Field, Notice } from "@/components/Controls";
 export default function Auth() {
-  const { user } = useAuth();
+  const { user, sharedEnabled, startSharedSignIn } = useAuth();
   const [params] = useSearchParams();
-  const raw = params.get("next") || "/";
-  const next =
-    raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")
-      ? raw
-      : "/";
+  const next = safePurchaseNext(params.get("next"));
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup" | "reset" | "recovery">(
     params.get("mode") === "recovery" ? "recovery" : "login",
@@ -30,10 +27,15 @@ export default function Auth() {
     setError("");
     setNotice("");
     try {
-      const c = cloudClient();
+      if (!supabase)
+        throw new Error(
+          "Account services are unavailable. You can continue in this browser.",
+        );
+      const c = supabase;
       if (mode === "login") {
         const { error } = await c.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        sharedAccount.useLegacySession();
       }
       if (mode === "signup") {
         const { error } = await c.auth.signUp({
@@ -58,6 +60,7 @@ export default function Auth() {
       if (mode === "recovery") {
         const { error } = await c.auth.updateUser({ password });
         if (error) throw error;
+        sharedAccount.useLegacySession();
         setNotice("Password updated.");
         navigate("/workspace");
       }
@@ -67,6 +70,57 @@ export default function Auth() {
       setBusy(false);
     }
   }
+  if (sharedEnabled && mode !== "recovery")
+    return (
+      <div className="auth-page">
+        <Link to="/" className="back-link">
+          <ArrowLeft size={16} />
+          Back to your decisions
+        </Link>
+        <div className="auth-panel">
+          <Compass size={32} />
+          <span className="eyebrow">JONATHANTIPPER.COM</span>
+          <h1>Keep your thinking together.</h1>
+          <p>
+            Use your jonathantipper.com account for Purchase Assistant. You can
+            sign in or create an account there.
+          </p>
+          <p>
+            Guest decisions stay in this browser until you choose to import
+            them.
+          </p>
+          {error && <Notice error>{error}</Notice>}
+          <Button
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError("");
+              try {
+                await startSharedSignIn(next);
+              } catch (error) {
+                setError(
+                  error instanceof Error
+                    ? error.message
+                    : "Shared sign-in is unavailable. Please try again.",
+                );
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? "Opening sign-in…" : "Continue with jonathantipper.com"}
+          </Button>
+          <p>
+            <a href={`${ACCOUNT_ORIGIN}/forgot-password`}>
+              Reset your shared account password
+            </a>
+          </p>
+          <p>
+            <a href={`${ACCOUNT_ORIGIN}/account`}>Manage your account</a>
+          </p>
+          <Link to="/">Continue in this browser</Link>
+        </div>
+      </div>
+    );
   return (
     <div className="auth-page">
       <Link to="/" className="back-link">
