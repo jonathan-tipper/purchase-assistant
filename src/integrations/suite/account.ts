@@ -114,11 +114,30 @@ export function createPurchaseAccount(
         now: options.now,
       })
     : null;
-  const source = () =>
-    sourceStorage.getItem(ACCOUNT_SOURCE_KEY) === "suite"
-      ? ("suite" as const)
-      : ("legacy" as const);
+  let fallbackSource: "legacy" | "suite" = "suite";
+  let volatileSource = false;
+  const source = () => {
+    if (volatileSource) return fallbackSource;
+    try {
+      const value = sourceStorage.getItem(ACCOUNT_SOURCE_KEY);
+      return value === null || value === "legacy"
+        ? ("legacy" as const)
+        : ("suite" as const);
+    } catch {
+      return fallbackSource;
+    }
+  };
   const changed = () => options.changed?.();
+  const selectSource = (value: "legacy" | "suite") => {
+    fallbackSource = value;
+    try {
+      sourceStorage.setItem(ACCOUNT_SOURCE_KEY, value);
+      volatileSource = false;
+    } catch {
+      volatileSource = true;
+    }
+    changed();
+  };
   return {
     enabled: config?.enabled === true,
     configured: client !== null,
@@ -127,8 +146,7 @@ export function createPurchaseAccount(
     publishableKey: config?.publishableKey ?? "",
     source,
     useLegacySession() {
-      sourceStorage.setItem(ACCOUNT_SOURCE_KEY, "legacy");
-      changed();
+      selectSource("legacy");
     },
     async begin(next: unknown) {
       if (!config?.enabled || !client)
@@ -136,8 +154,7 @@ export function createPurchaseAccount(
           "Shared sign-in is unavailable on this deployment. You can continue in this browser.",
         );
       const url = await client.authorisationUrl(safePurchaseNext(next));
-      sourceStorage.setItem(ACCOUNT_SOURCE_KEY, "suite");
-      changed();
+      selectSource("suite");
       return url;
     },
     async complete(url: string) {
@@ -147,8 +164,7 @@ export function createPurchaseAccount(
         );
       // Completion remains available with the entry flag off for issued requests.
       const result = await client.complete(url);
-      sourceStorage.setItem(ACCOUNT_SOURCE_KEY, "suite");
-      changed();
+      selectSource("suite");
       return safePurchaseNext(result.next);
     },
     async accessToken() {
@@ -163,8 +179,7 @@ export function createPurchaseAccount(
       try {
         if (client) await client.signOut({ scope: "local" });
       } finally {
-        sourceStorage.setItem(ACCOUNT_SOURCE_KEY, "suite");
-        changed();
+        selectSource("suite");
       }
     },
   };

@@ -8,6 +8,33 @@ afterEach(() => {
   sessionStorage.clear();
 });
 describe("real Supabase data transport", () => {
+  it.each([false, true])(
+    "loads without browser storage when shared entry is disabled (cloud configured: %s)",
+    async (configured) => {
+      vi.resetModules();
+      vi.stubEnv(
+        "VITE_SUPABASE_URL",
+        configured ? "https://auth.example.test" : "",
+      );
+      vi.stubEnv("VITE_SUPABASE_ANON_KEY", configured ? "public-test-key" : "");
+      vi.stubEnv("VITE_SHARED_AUTH_ENABLED", "false");
+      const getter = vi
+        .spyOn(window, "localStorage", "get")
+        .mockImplementation(() => {
+          throw new DOMException("Storage blocked", "SecurityError");
+        });
+      try {
+        const { sharedAccount, supabase, cloudClient } =
+          await import("../src/integrations/supabase/client");
+        expect(supabase === null).toBe(!configured);
+        expect(sharedAccount.enabled).toBe(false);
+        expect(sharedAccount.source()).toBe("suite");
+        expect(() => cloudClient()).toThrow(/unavailable|not configured/);
+      } finally {
+        getter.mockRestore();
+      }
+    },
+  );
   it("uses the app OAuth adapter bearer for data and functions without SDK session injection", async () => {
     vi.resetModules();
     localStorage.clear();

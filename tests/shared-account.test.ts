@@ -88,6 +88,66 @@ async function complete(
 }
 
 describe("Purchase shared-account transport", () => {
+  it("fails closed when source storage throws, including when shared entry is off", async () => {
+    const blocked = {
+      getItem(): string | null {
+        throw new Error("SecurityError");
+      },
+      setItem() {
+        throw new Error("SecurityError");
+      },
+    };
+    const account = createPurchaseAccount(null, blocked);
+    expect(account.enabled).toBe(false);
+    expect(account.source()).toBe("suite");
+    await expect(account.signOut()).resolves.toBeUndefined();
+    expect(account.source()).toBe("suite");
+  });
+  it("does not revive a stale legacy selection when source writes fail", async () => {
+    const values = new Map<string, string>();
+    const account = createPurchaseAccount(
+      config,
+      {
+        getItem: () => "legacy",
+        setItem() {
+          throw new Error("QuotaExceededError");
+        },
+      },
+      {
+        store: {
+          async get(k) {
+            return values.get(k) ?? null;
+          },
+          async set(k, v) {
+            values.set(k, v);
+          },
+          async remove(k) {
+            values.delete(k);
+          },
+        },
+        fetch: async (input) =>
+          String(input).includes("/logout")
+            ? new Response(null, { status: 204 })
+            : Response.json({
+                access_token: "access",
+                refresh_token: "refresh",
+                expires_in: 60,
+                token_type: "bearer",
+              }),
+      },
+    );
+    expect(account.source()).toBe("legacy");
+    const request = new URL(await account.begin("/workspace"));
+    expect(account.source()).toBe("suite");
+    await account.complete(
+      config.redirectUri +
+        "?code=code&state=" +
+        request.searchParams.get("state"),
+    );
+    await account.signOut();
+    expect(account.source()).toBe("suite");
+    expect(await account.accessToken()).toBe(null);
+  });
   it("uses a registered PKCE transaction, preserves the local decision return and never replaces legacy credentials", async () => {
     const f = fixture();
     f.values.set("legacy-supabase-session", "keep-original");

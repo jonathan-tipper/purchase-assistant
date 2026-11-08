@@ -78,6 +78,11 @@ sign-in/account creation goes through the central account service. Recovery and
 account-management links also use the central site. Retire the legacy accepting
 paths only after the actual outstanding-link/session compatibility window.
 
+The retained legacy recovery form uses its existing direct SDK policy. It does
+not implement the central site's session-bound recovery grant or claim equivalent
+fresh-reauthentication enforcement. New shared recovery requests use the central
+route; retirement of the legacy form remains a separate compatibility decision.
+
 “Sign out here” ends this app's shared session and requests local refresh-token
 revocation. It does not clear another origin's cookies. Suite-wide sign-out is
 available in the central Account page. Already-issued access JWTs retain their
