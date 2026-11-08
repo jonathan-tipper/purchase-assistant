@@ -44,7 +44,10 @@ const user = {
   id: "11111111-1111-4111-8111-111111111111",
   email: "fixture@example.test",
 };
-function token(signature = "signature") {
+function token(
+  signature = "signature",
+  overrides: Record<string, unknown> = {},
+) {
   return (
     "header." +
     btoa(
@@ -54,6 +57,7 @@ function token(signature = "signature") {
         role: "authenticated",
         aud: "authenticated",
         client_id: "purchase-client-25",
+        ...overrides,
       }),
     )
       .replaceAll("+", "-")
@@ -110,6 +114,30 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("shared identity restoration", () => {
+  it.each([
+    { label: "missing client", claims: { client_id: undefined }, profile: {} },
+    {
+      label: "foreign client",
+      claims: { client_id: "foreign-client" },
+      profile: {},
+    },
+    { label: "anonymous user", claims: {}, profile: { is_anonymous: true } },
+  ])("rejects $label for a shared account", async ({ claims, profile }) => {
+    mocks.token = token("signature", claims);
+    const rejected = mocks.token;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ ...user, ...profile })),
+    );
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+    await screen.findByText("Guest");
+    expect(mocks.clearSessionIfCurrent).toHaveBeenCalledWith(rejected);
+    expect(mocks.token).toBe("");
+  });
   it.each([401, 403])(
     "clears the exact rejected bearer after a %s identity response",
     async (status) => {

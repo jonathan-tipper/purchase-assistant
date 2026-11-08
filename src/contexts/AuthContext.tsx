@@ -41,14 +41,17 @@ async function accountUser() {
     throw new Error("Sign in again to restore your account workspace.");
   }
   const user = (await response.json()) as User;
+  const claims = verifiedAppTokenClaims(
+    `Bearer ${token}`,
+    user.id,
+    sharedAccount.supabaseUrl,
+    sharedAccount.clientId,
+  );
   if (
     !user.id ||
-    !verifiedAppTokenClaims(
-      `Bearer ${token}`,
-      user.id,
-      sharedAccount.supabaseUrl,
-      sharedAccount.clientId,
-    )
+    user.is_anonymous ||
+    !claims ||
+    claims.clientId !== sharedAccount.clientId
   ) {
     await sharedAccount.clearSessionIfCurrent(token);
     throw new Error("This session was not issued for Purchase Assistant.");
