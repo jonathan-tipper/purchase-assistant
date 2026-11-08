@@ -25,18 +25,24 @@ The default model is `qwen3-vl-235b-a22b` for text, images and research synthesi
 
 ### Shared-project app tokens
 
-Purchase Assistant currently accepts verified direct sessions only. After Auth
-verifies the exact bearer, the Edge Function checks its issuer, authenticated
-audience/role and subject against that verified user. Any non-null OAuth
-`client_id`, including malformed or empty values, is denied before the request
-body, service-role quota/ledger or paid provider is used. Identity scopes and
-user metadata do not grant assistant access. Direct sessions with absent/null
-client claims keep their existing flow; no suite client is approved for this app.
+Purchase Assistant retains verified direct sessions and admits the exact public
+OAuth client configured in `PA_SHARED_AUTH_CLIENT_ID`. With that variable unset,
+all non-null client claims remain denied. After Auth verifies the exact bearer,
+the Edge Function checks its issuer, authenticated audience/role and subject
+against that verified user. Malformed, empty and other apps' `client_id` values
+are denied before request parsing, quota/ledger or paid provider work. Identity
+scopes and user metadata do not grant assistant access.
 
-Deploy this boundary before enabling new All Apps OAuth clients. Verify unrelated
-app tokens receive 403 without quota/provider work, while an ordinary direct
-session still passes normal admission. Source tests use synthetic tokens and
-mocked Auth; they do not establish that the hosted function was deployed.
+Both legacy and shared requests must carry a valid session UUID. Before paid
+admission, the service-only `pa_has_live_session` helper checks the same session
+and user in Auth, including expiry. A missing/revoked session returns 401; a
+failed session check returns 503 without reserving quota or calling the provider.
+
+Follow [SHARED-SIGN-IN.md](SHARED-SIGN-IN.md) for the reviewed migration,
+registered client/callback, exact data resources, staged activation and rollback.
+Verify unrelated app tokens receive 403 without quota/provider work, while an
+ordinary direct session still passes normal admission. Source tests use
+synthetic tokens and mocked Auth; they do not establish hosted deployment.
 Retired AI endpoints remain 410, and the Spinning Plates webhook retains its
 separate custom-token authentication.
 
